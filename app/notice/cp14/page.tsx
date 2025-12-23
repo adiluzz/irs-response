@@ -15,8 +15,7 @@ import {
 } from '@/components/forms'
 import { Button } from '@/components/ui/Button'
 
-import { NoticeType } from '@/types'
-import { generateLetter } from '@/lib/generators/router'
+import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
 
 type CopyState = 'idle' | 'copied'
 
@@ -223,8 +222,6 @@ export default function CP14Page() {
       return
     }
 
-    const parsedAddr = parseAddressLines(formData.taxpayerAddress)
-
     const discrepancyLine = formData.discrepancyType
       ? `Discrepancy Type: ${discrepancyLabels[formData.discrepancyType]}`
       : ''
@@ -234,37 +231,28 @@ export default function CP14Page() {
       .filter(Boolean)
       .join('\n\n')
 
-    // Match CP14Data expected shape (includes discrepancyType)
-    const data = {
-      taxpayer: {
-        name: formData.taxpayerName,
-        address: parsedAddr.address,
-        city: parsedAddr.city,
-        state: parsedAddr.state,
-        zip: parsedAddr.zip,
-        ssn: formData.ssn ? onlyDigits(formData.ssn) : '',
-      },
-      taxYear: parseInt(formData.taxYear, 10),
-      noticeDate: formData.noticeDate,
-      noticeNumber: formData.noticeNumber,
-      amountDue: safeCurrencyInput(formData.amountDue),
-      explanation: explanationCombined,
-      discrepancyType: formData.discrepancyType, // ✅ REQUIRED
-      balanceDueReason,
-      responsePosition,
-    }
-
-    const options = {
-      balanceDueReason,
-      responsePosition,
-      appendReferences: includeReferences,
-    }
-
     try {
-      const result = generateLetter({
-        type: NoticeType.CP14,
-        data: data as any,
-        options,
+      const ctx: LetterContext = {
+        noticeType: 'CP14',
+        family: 'collection_balance_due',
+        taxpayerName: formData.taxpayerName,
+        taxpayerAddress: formData.taxpayerAddress,
+        idValue: formData.ssn ? onlyDigits(formData.ssn) : '',
+        noticeDate: formData.noticeDate,
+        taxYear: formData.taxYear,
+        amount: safeCurrencyInput(formData.amountDue),
+        // CP14 UI currently does not capture a due-date/deadline field; keep deterministic placeholder.
+        deadline: '',
+        position: responsePosition,
+        explanation: explanationCombined,
+      }
+
+      const blueprint = getBlueprint(ctx.noticeType)
+      const letterData = blueprint.build(ctx)
+
+      const result = composeLetter({
+        ...letterData,
+        todayISO: new Date().toISOString().split('T')[0],
       })
 
       const letterBody = extractLetterBody(result)
@@ -276,13 +264,7 @@ export default function CP14Page() {
       setHasGenerated(false)
       setValidationError(msg)
     }
-  }, [
-    formData,
-    includeReferences,
-    balanceDueReason,
-    responsePosition,
-    discrepancyLabels,
-  ])
+  }, [formData, responsePosition, discrepancyLabels])
 
   const handleCopy = useCallback(async () => {
     if (!generatedOutput) return
@@ -687,4 +669,3 @@ export default function CP14Page() {
     </SplitView>
   )
 }
-
