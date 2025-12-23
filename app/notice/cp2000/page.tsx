@@ -13,6 +13,7 @@ import {
   Textarea,
 } from '@/components/forms';
 import { Button } from '@/components/ui/Button';
+import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
 
 function formatSSN(value: string): string {
   const digits = value.replace(/\D/g, '');
@@ -29,7 +30,7 @@ function getDiscrepancyLabel(type: string): string {
     'w2-mismatch': 'W-2 Information Mismatch',
     'deduction-disallowed': 'Deduction Disallowed',
     'credit-adjustment': 'Credit Adjustment',
-    'other': 'Other Discrepancy',
+    other: 'Other Discrepancy',
   };
   return labels[type] || type;
 }
@@ -41,6 +42,15 @@ function getPositionLabel(position: string): string {
     disagree: 'I disagree with the proposed changes',
   };
   return labels[position] || position;
+}
+
+function extractLetterBody(result: unknown): string {
+  if (typeof result === 'string') return result;
+  if (result && typeof result === 'object' && 'letterBody' in result) {
+    const lb = (result as { letterBody?: unknown }).letterBody;
+    return typeof lb === 'string' ? lb : '';
+  }
+  return '';
 }
 
 export default function CP2000Page() {
@@ -110,50 +120,39 @@ export default function CP2000Page() {
       return;
     }
 
-    const output = `${new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })}
+    try {
+      const ctx: LetterContext = {
+        noticeType: 'CP2000',
+        family: 'underreporter_exam',
+        taxpayerName: formData.taxpayerName,
+        taxpayerAddress: formData.taxpayerAddress,
+        idValue: formData.ssn ? formData.ssn.replace(/\D/g, '') : '',
+        noticeDate: formData.noticeDate,
+        taxYear: formData.taxYear,
+        amount: formData.proposedAmount,
+        deadline: formData.responseDeadline,
+        discrepancyType: formData.discrepancyType || '',
+        explanation: formData.explanation || '',
+        position: formData.responsePosition || '',
+      };
 
-CERTIFIED MAIL - RETURN RECEIPT REQUESTED
+      const blueprint = getBlueprint(ctx.noticeType);
+      const letterData = blueprint.build(ctx);
 
-Internal Revenue Service
-Notice Date: ${formData.noticeDate}
+      const result = composeLetter({
+        ...letterData,
+        todayISO: new Date().toISOString().split('T')[0],
+      });
 
-RE: Response to CP2000 Notice
-    Tax Year: ${formData.taxYear}
-    Proposed Additional Tax: ${formData.proposedAmount}
-${formData.discrepancyType ? `    Discrepancy Type: ${getDiscrepancyLabel(formData.discrepancyType)}` : ''}
-    Response Deadline: ${formData.responseDeadline}
-
-Taxpayer: ${formData.taxpayerName}
-SSN: ${formatSSN(formData.ssn)}
-${formData.taxpayerAddress ? `Address:\n${formData.taxpayerAddress}` : ''}
-
-Dear Sir or Madam:
-
-I am writing in response to the CP2000 notice dated ${formData.noticeDate} proposing adjustments to my ${formData.taxYear} tax return in the amount of ${formData.proposedAmount}.
-
-RESPONSE POSITION:
-${formData.responsePosition ? getPositionLabel(formData.responsePosition) : 'See explanation below.'}
-${formData.explanation ? `\nEXPLANATION AND SUPPORTING INFORMATION:\n${formData.explanation}` : ''}
-
-I am submitting this response within the prescribed deadline of ${formData.responseDeadline} and request that you review the information provided.
-
-If you require additional documentation or clarification, please contact me at the address above.
-
-Respectfully submitted,
-
-
-_______________________________
-${formData.taxpayerName}
-Date: ${new Date().toLocaleDateString('en-US')}
-
-Enclosures: As referenced`;
-
-    setGeneratedOutput(output);
-    setHasGenerated(true);
+      const letterBody = extractLetterBody(result);
+      setGeneratedOutput(letterBody);
+      setHasGenerated(true);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Generation failed.';
+      setGeneratedOutput('');
+      setHasGenerated(false);
+      setValidationError(msg);
+    }
   }, [formData]);
 
   const handleCopy = useCallback(async () => {
@@ -522,4 +521,3 @@ Enclosures: As referenced`;
     </SplitView>
   );
 }
-
