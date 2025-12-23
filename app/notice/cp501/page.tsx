@@ -13,6 +13,7 @@ import {
   Textarea,
 } from '@/components/forms';
 import { Button } from '@/components/ui/Button';
+import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
 
 function formatSSN(value: string): string {
   const digits = value.replace(/\D/g, '');
@@ -86,50 +87,49 @@ export default function CP501Page() {
       return;
     }
 
-    const output = `${new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })}
+    try {
+      const ctx: LetterContext = {
+        noticeType: 'CP501',
+        family: 'collection_balance_due',
+        taxpayerName: formData.taxpayerName,
+        taxpayerAddress: formData.taxpayerAddress,
+        idValue: formData.ssn ? formData.ssn.replace(/\D/g, '') : '',
+        noticeDate: formData.noticeDate,
+        taxYear: formData.taxYear,
+        amount: formData.balanceDue,
+        // CP501 UI currently does not capture a due-date/deadline field; keep deterministic placeholder.
+        deadline: '',
+        // CP501 UI does not capture a disputeReason field; map to a stable default.
+        position: 'dispute',
+        explanation: formData.explanation || '',
+        priorActions: formData.priorPayments || '',
+      };
 
+      const blueprint = getBlueprint(ctx.noticeType);
+      const letterData = blueprint.build(ctx);
 
-CERTIFIED MAIL - RETURN RECEIPT REQUESTED
+      const result = composeLetter({
+        ...letterData,
+        todayISO: new Date().toISOString().split('T')[0],
+      });
 
-Internal Revenue Service
-Notice Date: ${formData.noticeDate}
+      const letterBody =
+        typeof result === 'string'
+          ? result
+          : result && typeof result === 'object' && 'letterBody' in result
+            ? typeof (result as { letterBody?: unknown }).letterBody === 'string'
+              ? ((result as { letterBody?: unknown }).letterBody as string)
+              : ''
+            : '';
 
-RE: Response to CP501 Reminder Notice
-    Tax Year: ${formData.taxYear}
-    Current Balance Due: ${formData.balanceDue}
-${formData.originalNoticeDate ? `    Original CP14 Date: ${formData.originalNoticeDate}` : ''}
-
-Taxpayer: ${formData.taxpayerName}
-SSN: ${formatSSN(formData.ssn)}
-${formData.taxpayerAddress ? `Address:\n${formData.taxpayerAddress}` : ''}
-
-Dear Sir or Madam:
-
-I am writing in response to the CP501 reminder notice dated ${formData.noticeDate} regarding the balance due of ${formData.balanceDue} for tax year ${formData.taxYear}.
-
-I acknowledge receipt of this reminder notice, which follows the original CP14 notice${formData.originalNoticeDate ? ` dated ${formData.originalNoticeDate}` : ''}.
-${formData.priorPayments ? `\nPrior Payments/Actions:\n${formData.priorPayments}` : ''}
-${formData.explanation ? `\nAdditional Information:\n${formData.explanation}` : ''}
-
-I am responding within the prescribed timeframe and request that you update your records accordingly.
-
-Please contact me if additional information or documentation is required.
-
-Respectfully submitted,
-
-
-_______________________________
-${formData.taxpayerName}
-Date: ${new Date().toLocaleDateString('en-US')}
-
-Enclosures: As referenced`;
-
-    setGeneratedOutput(output);
-    setHasGenerated(true);
+      setGeneratedOutput(letterBody);
+      setHasGenerated(true);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Generation failed.';
+      setGeneratedOutput('');
+      setHasGenerated(false);
+      setValidationError(msg);
+    }
   }, [formData]);
 
   const handleCopy = useCallback(async () => {
