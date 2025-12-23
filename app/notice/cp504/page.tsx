@@ -15,8 +15,7 @@ import {
 } from '@/components/forms'
 import { Button } from '@/components/ui/Button'
 
-import { NoticeType } from '@/types'
-import { generateLetter } from '@/lib/generators/router'
+import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
 
 type CopyState = 'idle' | 'copied'
 
@@ -258,10 +257,27 @@ export default function CP504Page() {
     }
 
     try {
-      const result = generateLetter({
-        type: NoticeType.CP504,
-        data: data as any,
-        options,
+      const ctx: LetterContext = {
+        noticeType: 'CP504',
+        family: 'collection_balance_due',
+        taxpayerName: formData.taxpayerName,
+        taxpayerAddress: formData.taxpayerAddress,
+        idValue: formData.ssn ? onlyDigits(formData.ssn) : '',
+        noticeDate: formData.noticeDate,
+        taxYear: formData.taxYear,
+        amount: safeCurrencyInput(formData.amountDue),
+        deadline: '',
+        position: responsePosition,
+        explanation: explanationCombined,
+        priorActions: '',
+      }
+
+      const blueprint = getBlueprint(ctx.noticeType)
+      const letterData = blueprint.build(ctx)
+
+      const result = composeLetter({
+        ...letterData,
+        todayISO: new Date().toISOString().split('T')[0],
       })
 
       const letterBody = extractLetterBody(result)
@@ -273,7 +289,13 @@ export default function CP504Page() {
       setHasGenerated(false)
       setValidationError(msg)
     }
-  }, [formData, includeReferences, balanceDueReason, responsePosition, discrepancyLabels])
+  }, [
+    formData,
+    includeReferences,
+    balanceDueReason,
+    responsePosition,
+    discrepancyLabels,
+  ])
 
   const handleCopy = useCallback(async () => {
     if (!generatedOutput) return
@@ -310,7 +332,10 @@ export default function CP504Page() {
 
   return (
     <SplitView>
-      <FormPanel title="TAC Emergency IRS Responder" subtitle="Deterministic IRS Notice Response Engine">
+      <FormPanel
+        title="TAC Emergency IRS Responder"
+        subtitle="Deterministic IRS Notice Response Engine"
+      >
         <div
           style={{
             display: 'inline-flex',
@@ -328,9 +353,16 @@ export default function CP504Page() {
           CP504 — Final Notice Before Levy
         </div>
 
-        <FormSection title="Response Context" description="Select the reason and your position for this CP504 response.">
+        <FormSection
+          title="Response Context"
+          description="Select the reason and your position for this CP504 response."
+        >
           <FormRow columns={2}>
-            <FormField label="Balance Due Reason" htmlFor="balanceDueReason" required>
+            <FormField
+              label="Balance Due Reason"
+              htmlFor="balanceDueReason"
+              required
+            >
               <Select
                 id="balanceDueReason"
                 name="balanceDueReason"
@@ -351,7 +383,11 @@ export default function CP504Page() {
               </Select>
             </FormField>
 
-            <FormField label="Response Position" htmlFor="responsePosition" required>
+            <FormField
+              label="Response Position"
+              htmlFor="responsePosition"
+              required
+            >
               <Select
                 id="responsePosition"
                 name="responsePosition"
@@ -402,7 +438,11 @@ export default function CP504Page() {
           </FormField>
 
           <FormRow columns={2}>
-            <FormField label="SSN / ITIN" htmlFor="ssn" hint="Optional: stored as digits">
+            <FormField
+              label="SSN / ITIN"
+              htmlFor="ssn"
+              hint="Optional: stored as digits"
+            >
               <Input
                 id="ssn"
                 name="ssn"
@@ -414,7 +454,12 @@ export default function CP504Page() {
             </FormField>
 
             <FormField label="Tax Year" htmlFor="taxYear" required>
-              <Select id="taxYear" name="taxYear" value={formData.taxYear} onChange={handleChange}>
+              <Select
+                id="taxYear"
+                name="taxYear"
+                value={formData.taxYear}
+                onChange={handleChange}
+              >
                 <option value="">Select year</option>
                 <option value="2024">2024</option>
                 <option value="2023">2023</option>
@@ -426,7 +471,10 @@ export default function CP504Page() {
           </FormRow>
         </FormSection>
 
-        <FormSection title="Notice Details" description="Enter the specific information from your CP504 notice.">
+        <FormSection
+          title="Notice Details"
+          description="Enter the specific information from your CP504 notice."
+        >
           <FormRow columns={2}>
             <FormField label="Notice Date" htmlFor="noticeDate" required>
               <Input
@@ -471,7 +519,12 @@ export default function CP504Page() {
               />
             </FormField>
 
-            <FormField label="Discrepancy Type" htmlFor="discrepancyType" hint="If identified" required>
+            <FormField
+              label="Discrepancy Type"
+              htmlFor="discrepancyType"
+              hint="If identified"
+              required
+            >
               <Select
                 id="discrepancyType"
                 name="discrepancyType"
@@ -488,8 +541,14 @@ export default function CP504Page() {
           </FormRow>
         </FormSection>
 
-        <FormSection title="Explanation" description="Provide supporting information to include in the response letter.">
-          <FormField label="Explanation and Supporting Information" htmlFor="explanation">
+        <FormSection
+          title="Explanation"
+          description="Provide supporting information to include in the response letter."
+        >
+          <FormField
+            label="Explanation and Supporting Information"
+            htmlFor="explanation"
+          >
             <Textarea
               id="explanation"
               name="explanation"
@@ -501,7 +560,10 @@ export default function CP504Page() {
           </FormField>
         </FormSection>
 
-        <FormSection title="Output Options" description="Configure the generated document output.">
+        <FormSection
+          title="Output Options"
+          description="Configure the generated document output."
+        >
           <div
             style={{
               display: 'flex',
@@ -553,9 +615,22 @@ export default function CP504Page() {
             Clear Form
           </Button>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: '12px',
+            }}
+          >
             {validationError && (
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--red-600)', textAlign: 'right' }}>
+              <div
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--red-600)',
+                  textAlign: 'right',
+                }}
+              >
                 {validationError}
               </div>
             )}
@@ -564,7 +639,12 @@ export default function CP504Page() {
               <Button variant="secondary" type="button" disabled>
                 Save Draft
               </Button>
-              <Button variant="primary" type="button" disabled={!canGenerate} onClick={handleGenerate}>
+              <Button
+                variant="primary"
+                type="button"
+                disabled={!canGenerate}
+                onClick={handleGenerate}
+              >
                 Generate Letter
               </Button>
             </div>
@@ -630,7 +710,8 @@ export default function CP504Page() {
                 backgroundColor: '#ffffff',
                 border: '1px solid var(--gray-200)',
                 borderRadius: 'var(--radius-md)',
-                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03)',
+                boxShadow:
+                  '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03)',
                 padding: '40px 36px',
                 minHeight: '600px',
               }}
@@ -661,10 +742,18 @@ export default function CP504Page() {
                 color: 'var(--gray-400)',
               }}
             >
-              <p style={{ fontWeight: 500, color: 'var(--gray-500)', marginBottom: '4px' }}>
+              <p
+                style={{
+                  fontWeight: 500,
+                  color: 'var(--gray-500)',
+                  marginBottom: '4px',
+                }}
+              >
                 Awaiting Input
               </p>
-              <p style={{ fontSize: '12px' }}>Complete required fields and click Generate</p>
+              <p style={{ fontSize: '12px' }}>
+                Complete required fields and click Generate
+              </p>
             </div>
           )}
         </div>
