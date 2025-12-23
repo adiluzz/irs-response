@@ -15,14 +15,6 @@ import {
 import { Button } from '@/components/ui/Button';
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
 
-function formatSSN(value: string): string {
-  const digits = value.replace(/\D/g, '');
-  if (digits.length >= 4) {
-    return `XXX-XX-${digits.slice(-4)}`;
-  }
-  return 'XXX-XX-XXXX';
-}
-
 export default function CP501Page() {
   const [formData, setFormData] = useState({
     taxpayerName: '',
