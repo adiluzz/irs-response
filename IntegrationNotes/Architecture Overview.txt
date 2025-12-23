@@ -1,0 +1,135 @@
+Architecture Overview
+
+C:\tac-response\
+├── app/
+│   ├── layout.tsx          ← Root layout (App Shell wrapper)
+│   ├── page.tsx            ← Landing redirect or dashboard
+│   ├── globals.css         ← Design tokens + base styles
+│   └── notice/
+│       └── page.tsx        ← PRIMARY UI (preserve core logic)
+│
+├── components/
+│   ├── shell/
+│   │   ├── AppShell.tsx        ← Full app wrapper
+│   │   ├── TopBar.tsx          ← Header with branding
+│   │   └── Sidebar.tsx         ← Navigation menu
+│   │
+│   ├── layout/
+│   │   ├── ContentArea.tsx     ← Main content wrapper
+│   │   ├── PreviewPanel.tsx    ← Right-side document preview
+│   │   └── SplitView.tsx       ← Two-column form/preview layout
+│   │
+│   ├── forms/
+│   │   ├── FormSection.tsx     ← Grouped form fields wrapper
+│   │   ├── FormField.tsx       ← Label + input + error state
+│   │   └── FormActions.tsx     ← Button row for form actions
+│   │
+│   └── ui/
+│       ├── Badge.tsx           ← Status/version badges
+│       ├── Button.tsx          ← Primary/secondary buttons
+│       ├── Card.tsx            ← Content containers
+│       └── NavItem.tsx         ← Sidebar navigation items
+│
+└── lib/
+    └── constants/
+        └── navigation.ts       ← Sidebar menu structure
+
+
+Layout Hierarchy
+
+┌─────────────────────────────────────────────────────────────────┐
+│  TopBar                                                    56px │
+│  [Logo + Title]                              [Version Badge]    │
+├────────────┬────────────────────────────────────────────────────┤
+│            │                                                    │
+│  Sidebar   │  ContentArea                                       │
+│  240px     │                                                    │
+│            │  ┌─────────────────────┬──────────────────────┐   │
+│  • CP14    │  │                     │                      │   │
+│  • CP501   │  │  Form Panel         │  Preview Panel       │   │
+│  • CP2000  │  │  (flex: 1)          │  (480px fixed)       │   │
+│    ...     │  │                     │                      │   │
+│            │  │                     │  [Document Preview]  │   │
+│            │  │  [Form Sections]    │                      │   │
+│            │  │                     │                      │   │
+│            │  └─────────────────────┴──────────────────────┘   │
+│            │                                                    │
+└────────────┴────────────────────────────────────────────────────┘
+
+
+
+Design Tokens (Preview)
+
+/* Core palette */
+--gray-50: #f9fafb;
+--gray-100: #f3f4f6;
+--gray-200: #e5e7eb;
+--gray-300: #d1d5db;
+--gray-400: #9ca3af;
+--gray-500: #6b7280;
+--gray-600: #4b5563;
+--gray-700: #374151;
+--gray-800: #1f2937;
+--gray-900: #111827;
+
+--blue-600: #2563eb;
+--blue-700: #1d4ed8;
+
+--red-600: #dc2626;
+
+/* Spacing scale */
+--space-1: 4px;
+--space-2: 8px;
+--space-3: 12px;
+--space-4: 16px;
+--space-5: 20px;
+--space-6: 24px;
+--space-8: 32px;
+
+/* Typography */
+--font-sans: 'Inter', -apple-system, sans-serif;
+--text-xs: 12px;
+--text-sm: 14px;
+--text-base: 16px;
+--text-lg: 18px;
+--text-xl: 20px;
+
+
+
+Component Responsibility Map
+Component	Responsibility
+AppShell	Wraps entire app, provides grid structure
+TopBar	Branding, version badge, future user menu slot
+Sidebar	Navigation with categories, active states, disabled items
+SplitView	Horizontal split between form and preview
+FormSection	Visual grouping with title and description
+PreviewPanel	Scrollable, paper-styled letter outpu
+
+
+Integration Point
+The existing app/notice/page.tsx will be refactored to:
+
+// Pseudocode — actual implementation in Chunk 3
+export default function NoticePage() {
+  // ✅ EXISTING LOGIC PRESERVED
+  const [formData, setFormData] = useState(initialState);
+  const letterOutput = generateLetter(formData); // untouched
+
+  return (
+    <SplitView>
+      <FormPanel>
+        {/* New UI wrapping existing form fields */}
+      </FormPanel>
+      <PreviewPanel content={letterOutput} />
+    </SplitView>
+  );
+}
+
+Confirmation Checklist
+ No changes to generator functions
+ No changes to data shapes
+ No AI/LLM integration
+ UI-only scope
+ Incremental delivery structure
+
+

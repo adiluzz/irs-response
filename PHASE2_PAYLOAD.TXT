@@ -1,0 +1,147 @@
+===== FILE: /lib/templates.ts =====
+import { NoticeType, NoticeData, CP14Data, CP2000Data, CP501Data } from '../types'
+import { generateCP14Letter } from './cp14Generator'
+import { generateCP2000Letter } from './cp2000Generator'
+import { generateCP501Letter } from './cp501Generator'
+
+export function generateLetter(noticeType: NoticeType, data: NoticeData): string {
+  switch (noticeType) {
+    case NoticeType.CP14:
+      return generateCP14Letter(data as CP14Data)
+    case NoticeType.CP2000:
+      return generateCP2000Letter(data as CP2000Data)
+    case NoticeType.CP501:
+      return generateCP501Letter(data as CP501Data)
+    default:
+      throw new Error(`Unsupported notice type: ${noticeType}`)
+  }
+}
+
+===== FILE: /lib/notices.ts =====
+import { NoticeType } from '../types'
+
+export interface NoticeEntry {
+  type: NoticeType
+  label: string
+}
+
+export const supportedNotices: NoticeEntry[] = [
+  { type: NoticeType.CP2000, label: 'CP2000 - Underreported Income' },
+  { type: NoticeType.CP14, label: 'CP14 - Balance Due' },
+  { type: NoticeType.CP501, label: 'CP501 - Reminder Notice' },
+  { type: NoticeType.CP12, label: 'CP12 - Adjustment' },
+  { type: NoticeType.CP05, label: 'CP05 - Review' },
+]
+
+===== FILE: /lib/cp14Generator.ts =====
+import { CP14Data } from '../types'
+import { formatCurrency, formatDate } from './format'
+
+export function generateCP14Letter(data: CP14Data): string {
+  const formattedBalance = formatCurrency(data.balanceDue)
+  const formattedDate = formatDate(data.noticeDate)
+
+  let letter = `RE: CP14 Notice - Tax Year ${data.taxYear}
+Notice Number: ${data.noticeNumber}
+Notice Date: ${formattedDate}
+
+This letter is in response to the CP14 notice regarding a balance due of ${formattedBalance} for tax year ${data.taxYear}.
+
+`
+
+  if (data.paymentIntent === 'pay_now') {
+    letter += `I am submitting payment for the full amount of ${formattedBalance}.`
+    if (data.paymentDate) {
+      letter += ` Payment will be made on ${formatDate(data.paymentDate)}.`
+    }
+    letter += '\n'
+  } else if (data.paymentIntent === 'installment_plan') {
+    letter += `I am requesting an installment plan to pay the balance of ${formattedBalance}.\n`
+  } else if (data.paymentIntent === 'dispute') {
+    letter += `I am disputing the balance due of ${formattedBalance}.\n`
+    if (data.disputeExplanation) {
+      letter += `\nExplanation: ${data.disputeExplanation}\n`
+    }
+  }
+
+  return letter
+}
+
+===== FILE: /lib/cp2000Generator.ts =====
+
+import { CP2000Data } from '../types'
+import { formatCurrency, formatDate } from './format'
+
+export function generateCP2000Letter(data: CP2000Data): string {
+  const formattedUnderreported = formatCurrency(data.underreportedAmount)
+  const formattedProposedTax = formatCurrency(data.proposedTaxDue)
+  const formattedDate = formatDate(data.noticeDate)
+
+  let letter = `RE: CP2000 Notice - Tax Year ${data.taxYear}
+Notice Number: ${data.noticeNumber}
+Notice Date: ${formattedDate}
+
+This letter is in response to the CP2000 notice regarding underreported income of ${formattedUnderreported} and proposed tax due of ${formattedProposedTax} for tax year ${data.taxYear}.
+
+I disagree with the proposed changes for the following reason: `
+
+  switch (data.disagreementReason) {
+    case 'already_reported':
+      letter += 'This income was already reported on my tax return.'
+      break
+    case 'incorrect_amount':
+      letter += 'The amount reported by the IRS is incorrect.'
+      break
+    case 'not_my_income':
+      letter += 'This income does not belong to me.'
+      break
+    case 'other':
+      letter += 'See explanation below.'
+      break
+  }
+
+  letter += '\n'
+
+  if (data.disagreementExplanation) {
+    letter += `\nExplanation: ${data.disagreementExplanation}\n`
+  }
+
+  return letter
+}
+
+===== FILE: /lib/cp501Generator.ts =====
+import { CP501Data } from '../types'
+import { formatCurrency, formatDate } from './format'
+
+export function generateCP501Letter(data: CP501Data): string {
+  const formattedBalance = formatCurrency(data.balanceDue)
+  const formattedDate = formatDate(data.noticeDate)
+
+  let letter = `RE: CP501 Notice - Tax Year ${data.taxYear}
+Notice Number: ${data.noticeNumber}
+Notice Date: ${formattedDate}
+
+This letter is in response to the CP501 reminder notice regarding a balance due of ${formattedBalance} for tax year ${data.taxYear}.
+
+`
+
+  if (data.paymentIntent === 'pay_now') {
+    letter += `I am submitting payment for the full amount of ${formattedBalance}.`
+    if (data.paymentDate) {
+      letter += ` Payment will be made on ${formatDate(data.paymentDate)}.`
+    }
+    letter += '\n'
+  } else if (data.paymentIntent === 'installment_plan') {
+    letter += `I am requesting an installment plan to pay the balance of ${formattedBalance}.\n`
+  } else if (data.paymentIntent === 'dispute') {
+    letter += `I am disputing the balance due of ${formattedBalance}.\n`
+    if (data.disputeExplanation) {
+      letter += `\nExplanation: ${data.disputeExplanation}\n`
+    }
+  }
+
+  return letter
+}
+
+
+

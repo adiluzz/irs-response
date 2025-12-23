@@ -1,0 +1,120 @@
+# apply-batch2.ps1
+# Phase 2 – Batch 2 installer (extracts paths via /lib/ token only)
+
+$ErrorActionPreference = "Stop"
+$root = "C:\tac-response"
+$payloadPath = Join-Path $root "PHASE2_PAYLOAD.TXT"
+
+if (!(Test-Path $payloadPath)) { throw "Payload not found: $payloadPath" }
+Write-Host "Using payload: $payloadPath"
+
+$text = Get-Content -LiteralPath $payloadPath -Raw -ErrorAction Stop
+if ([string]::IsNullOrWhiteSpace($text)) { throw "Payload file is empty: $payloadPath" }
+
+# Normalize line endings
+$lines = ($text -replace "`r`n", "`n" -replace "`r", "`n") -split "`n"
+
+function Clean([string]$s) {
+  if ($null -eq $s) { return "" }
+
+  # Remove BOM + zero-width + NBSP
+  $s = $s -replace "[\uFEFF\u200B\u200C\u200D\u00A0]", ""
+
+  # Normalize slash lookalikes to ASCII '/'
+  $s = $s -replace "[\u2215\u2044\uFF0F]", "/"
+
+  # Normalize dot lookalikes to ASCII '.'
+  $s = $s -replace "[\uFF0E\u2024\u00B7\u2219]", "."
+
+  return $s.Trim()
+}
+
+function Extract-Lib-Path([string]$line) {
+  $l = Clean $line
+  $u = $l.ToLowerInvariant()
+
+  # Marker lines contain "/lib/" or "lib/".
+  $idx = $u.IndexOf("/lib/")
+  if ($idx -lt 0) { $idx = $u.IndexOf("lib/") }
+  if ($idx -lt 0) { return $null }
+
+  $after = $l.Substring($idx)
+
+  # First token (ends at whitespace)
+  $token = ($after -split '\s+')[0]
+
+  # Strip leading '=' junk and trailing '=' junk (ASCII and common fullwidth)
+  $token = ($token -replace '^[=＝]+', '') -replace '[=＝]+$', ''
+
+  # Normalize again
+  $token = Clean $token
+
+  # Normalize leading slash
+  $token = $token.TrimStart("/")
+
+  # Sanity: must start with lib/
+  if (-not ($token.ToLowerInvariant().StartsWith("lib/"))) { return $null }
+
+  return $token
+}
+
+$blocks = @()
+$currentPath = $null
+$currentContent = New-Object System.Collections.Generic.List[string]
+
+function Flush-Block {
+  if ($currentPath) {
+    $blocks += [PSCustomObject]@{
+      Path    = $currentPath
+      Content = ($currentContent -join "`r`n")
+    }
+  }
+}
+
+foreach ($raw in $lines) {
+  $maybePath = Extract-Lib-Path $raw
+
+  if ($maybePath) {
+    Flush-Block
+    $currentPath = $maybePath
+    $currentContent = New-Object System.Collections.Generic.List[string]
+    continue
+  }
+
+  if ($currentPath) {
+    $currentContent.Add($raw) | Out-Null
+  }
+}
+
+Flush-Block
+
+if ($blocks.Count -eq 0) {
+  Write-Host "DEBUG: first 50 cleaned lines:"
+  $lines | Select-O  $lines | Select-Object -First 50 | ForEach-Object { Write-Host (Clean $_) }
+  throw "No file blocks parsed. Expected marker lines containing /lib/..."
+}
+
+Write-Host "Applying Batch 2 ($($blocks.Count) files)..."
+
+foreach ($b in $blocks) {
+  $rel = Clean $b.Path
+  $dest = Join-Path $root $rel
+  $dir  = Split-Path $dest -Parent
+
+  if (!(Test-Path $dir)) {
+    New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    Write-Host "Created folder: $dir"
+  }
+
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($dest, $b.Content, $utf8NoBom)
+
+  Write-Host "Wrote: $dest"
+}
+
+Write-Host ""
+Write-Host "Batch 2 complete."
+Write-Host "Next:"
+Write-Host "  cd C:\tac-response"
+Write-Host "  npm run build"
+

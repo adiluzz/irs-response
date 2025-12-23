@@ -1,0 +1,32 @@
+===== FILE: /lib/format.ts =====
+/**
+ * NOTE: Keep formatters tolerant of both string and number inputs.
+ * Runtime safety: never call .replace() on non-strings.
+ */
+
+export function formatCurrency(value: unknown): string {
+  // Accept number OR string; strip any symbols/commas safely.
+  const raw = String(value ?? '')
+  const cleaned = raw.replace(/[^0-9.-]/g, '')
+  const num = cleaned === '' ? 0 : Number(cleaned)
+
+  // If conversion fails, fall back to original string.
+  if (!Number.isFinite(num)) return raw
+
+  return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}
+
+export function formatDate(value: unknown): string {
+  const raw = String(value ?? '').trim()
+  if (!raw) return ''
+
+  // Common browser <input type="date"> format: YYYY-MM-DD
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (m) {
+    const [, yyyy, mm, dd] = m
+    return `${mm}/${dd}/${yyyy}`
+  }
+
+  // If already formatted or unknown, return as-is (still a string)
+  return raw
+}

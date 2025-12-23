@@ -1,0 +1,25 @@
+import { generateLetter } from '@/lib/letters';
+
+const result = generateLetter({
+  noticeType: 'CP14',
+  intent: 'installment',
+  vars: {
+    TAXPAYER_NAME: 'John A. Smith',
+    TAXPAYER_ADDRESS: '123 Main Street',
+    TAXPAYER_CITY_STATE_ZIP: 'Austin, TX 78701',
+    TAXPAYER_SSN: '123-45-6789',
+    TAXPAYER_PHONE: '(512) 555-1234',
+    TODAY_DATE: 'May 22, 2025',
+    TAX_YEAR: '2023',
+    BALANCE: '$4,850.00',
+    MONTHLY_PAYMENT: '$250.00',
+    NOTICE_NUMBER: 'CP14-2025-00012345',
+  },
+  includeEducationalReferences: true,
+});
+
+console.log(result.fullLetter);
+// Returns complete letter with header, body, signature, and educational appendix
+
+console.log(result.body);
+// Returns body only (for preview in UI)

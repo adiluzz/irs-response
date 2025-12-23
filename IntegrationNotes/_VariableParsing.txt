@@ -1,0 +1,16 @@
+
+2. Variable Passing
+All generators expect a vars object with these fields:
+
+typescript
+interface CommonVars {
+  TODAY_DATE: string;      // e.g., "May 15, 2025"
+  TAX_YEAR: string;        // e.g., "2023"
+  BALANCE: string;         // e.g., "$4,850.00"
+  NOTICE_DATE?: string;    // e.g., "April 28, 2025"
+  NOTICE_NUMBER?: string;  // e.g., "CP14-12345678"
+  USER_NOTE?: string;      // Optional short user note
+  REASON_ID?: string;      // For dispute/disagree flows
+  MONTHLY_PAYMENT?: string; // For installment only, e.g., "$250.00"
+  includeEducationalReferences?: boolean;
+}

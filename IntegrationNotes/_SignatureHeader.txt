@@ -1,0 +1,2 @@
+6. Signature/Header
+The generators output body only. The existing generator wrapper should prepend header (taxpayer info, date, IRS address) and append signature block (Sincerely, name, SSN, etc.) as it currently does.

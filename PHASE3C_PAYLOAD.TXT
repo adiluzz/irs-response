@@ -1,0 +1,394 @@
+===== FILE: /app/notice/notice.module.css =====
+.page {
+  min-height: 100vh;
+  padding: 32px 28px;
+  background: #070707;
+  color: #f2f2f2;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.h1 {
+  font-size: 30px;
+  font-weight: 850;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.sub {
+  margin-top: 8px;
+  margin-bottom: 18px;
+  color: rgba(242, 242, 242, 0.72);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 18px;
+}
+
+.card {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+.rowTop {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.label {
+  display: grid;
+  gap: 6px;
+  color: rgba(242, 242, 242, 0.88);
+  font-size: 13px;
+}
+
+.input, .select, .textarea {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.30);
+  color: #fff;
+  outline: none;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.btnSmall {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.hr {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  margin: 14px 0;
+}
+
+.formGrid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.formGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.previewHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.previewBody {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,0.22);
+  min-height: 360px;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(242, 242, 242, 0.92);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(242,242,242,0.62);
+}
+
+===== FILE: /app/notice/page.tsx =====
+'use client'
+
+import { useMemo, useState } from 'react'
+import { NoticeType } from '../../types'
+import { supportedNotices } from '../../lib/notices'
+import { generateLetter } from '../../lib/templates'
+import styles from './notice.module.css'
+
+type Base = { noticeNumber: string; noticeDate: string; taxYear: string }
+
+type State =
+  | (Base & {
+      noticeType: NoticeType.CP14 | NoticeType.CP501
+      balanceDue: string
+      paymentIntent: 'pay_now' | 'installment_plan' | 'dispute'
+      paymentDate?: string
+      disputeExplanation?: string
+    })
+  | (Base & {
+      noticeType: NoticeType.CP2000
+      underreportedAmount: string
+      proposedTaxDue: string
+      disagreementReason: 'already_reported' | 'incorrect_amount' | 'not_my_income' | 'other'
+      disagreementExplanation?: string
+    })
+
+export default function NoticePage() {
+  const allowedNotices = useMemo(() => {
+    const allowed = new Set([NoticeType.CP14, NoticeType.CP2000, NoticeType.CP501])
+    return supportedNotices.filter((n) => allowed.has(n.type))
+  }, [])
+
+  const [state, setState] = useState<State>({
+    noticeType: NoticeType.CP14,
+    noticeNumber: '',
+    noticeDate: '',
+    taxYear: '',
+    balanceDue: '',
+    paymentIntent: 'pay_now',
+    paymentDate: '',
+    disputeExplanation: '',
+  } as any)
+
+  const [output, setOutput] = useState('')
+
+  function patch(p: Partial<State>) {
+    setState((prev) => ({ ...prev, ...p } as any))
+  }
+
+  function changeType(next: NoticeType) {
+    setOutput('')
+    if (next === NoticeType.CP2000) {
+      setState({
+        noticeType: NoticeType.CP2000,
+        noticeNumber: '',
+        noticeDate: '',
+        taxYear: '',
+        underreportedAmount: '',
+        proposedTaxDue: '',
+        disagreementReason: 'already_reported',
+        disagreementExplanation: '',
+      } as any)
+      return
+    }
+    if (next === NoticeType.CP501) {
+      setState({
+        noticeType: NoticeType.CP501,
+        noticeNumber: '',
+        noticeDate: '',
+        taxYear: '',
+        balanceDue: '',
+        paymentIntent: 'pay_now',
+        paymentDate: '',
+        disputeExplanation: '',
+      } as any)
+      return
+    }
+    setState({
+      noticeType: NoticeType.CP14,
+      noticeNumber: '',
+      noticeDate: '',
+      taxYear: '',
+      balanceDue: '',
+      paymentIntent: 'pay_now',
+      paymentDate: '',
+      disputeExplanation: '',
+    } as any)
+  }
+
+  function onGenerate() {
+    try {
+      const nt = state.noticeType
+      const common = { noticeNumber: state.noticeNumber, noticeDate: state.noticeDate, taxYear: state.taxYear }
+      let data: any
+
+      if (nt === NoticeType.CP2000) {
+        data = {
+          ...common,
+          underreportedAmount: Number((state as any).underreportedAmount || 0),
+          proposedTaxDue: Number((state as any).proposedTaxDue || 0),
+          disagreementReason: (state as any).disagreementReason,
+          disagreementExplanation: (state as any).disagreementExplanation || undefined,
+        }
+      } else {
+        data = {
+          ...common,
+          balanceDue: Number((state as any).balanceDue || 0),
+          paymentIntent: (state as any).paymentIntent,
+          paymentDate: (state as any).paymentDate || undefined,
+          disputeExplanation: (state as any).disputeExplanation || undefined,
+        }
+      }
+
+      setOutput(generateLetter(nt, data))
+    } catch (e: any) {
+      setOutput(`ERROR: ${e?.message || String(e)}`)
+    }
+  }
+
+  return (
+    <main className={styles.page}>
+      <div className={styles.wrap}>
+        <h1 className={styles.h1}>TAC Response Notice Wizard</h1>
+        <p className={styles.sub}>Select a notice type, enter values, then generate a draft response letter.</p>
+
+        <div className={styles.grid}>
+          <div className={styles.card}>
+            <div className={styles.rowTop}>
+              <label className={styles.label} style={{ flex: 1 }}>
+                <span>Notice Type</span>
+                <select className={styles.select} value={state.noticeType} onChange={(e) => changeType(e.target.value as any)}>
+                  {allowedNotices.map((n) => (
+                    <option key={n.type} value={n.type}>
+                      {n.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button type="button" onClick={onGenerate} className={styles.btn}>
+                Generate
+              </button>
+            </div>
+
+            <div className={styles.formGrid3}>
+              <label className={styles.label}>
+                <span>Notice Number</span>
+                <input className={styles.input} value={state.noticeNumber} onChange={(e) => patch({ noticeNumber: e.target.value } as any)} />
+              </label>
+
+              <label className={styles.label}>
+                <span>Notice Date</span>
+                <input className={styles.input} type="date" value={state.noticeDate} onChange={(e) => patch({ noticeDate: e.target.value } as any)} />
+              </label>
+
+              <label className={styles.label}>
+                <span>Tax Year</span>
+                <input className={styles.input} value={state.taxYear} onChange={(e) => patch({ taxYear: e.target.value } as any)} />
+              </label>
+            </div>
+
+            <hr className={styles.hr} />
+
+            {state.noticeType === NoticeType.CP2000 ? (
+              <div className={styles.formGrid2}>
+                <label className={styles.label}>
+                  <span>Underreported Amount</span>
+                  <input className={styles.input} value={(state as any).underreportedAmount} onChange={(e) => patch({ underreportedAmount: e.target.value } as any)} />
+                </label>
+
+                <label className={styles.label}>
+                  <span>Proposed Tax Due</span>
+                  <input className={styles.input} value={(state as any).proposedTaxDue} onChange={(e) => patch({ proposedTaxDue: e.target.value } as any)} />
+                </label>
+
+                <label className={styles.label}>
+                  <span>Disagreement Reason</span>
+                  <select className={styles.select} value={(state as any).disagreementReason} onChange={(e) => patch({ disagreementReason: e.target.value } as any)}>
+                    <option value="already_reported">Already reported</option>
+                    <option value="incorrect_amount">Incorrect amount</option>
+                    <option value="not_my_income">Not my income</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+
+                <label className={styles.label} style={{ gridColumn: '1 / -1' }}>
+                  <span>Explanation (optional)</span>
+                  <textarea className={styles.textarea} value={(state as any).disagreementExplanation || ''} onChange={(e) => patch({ disagreementExplanation: e.target.value } as any)} />
+                </label>
+              </div>
+            ) : (
+              <div className={styles.formGrid2}>
+                <label className={styles.label}>
+                  <span>Balance Due</span>
+                  <input className={styles.input} value={(state as any).balanceDue} onChange={(e) => patch({ balanceDue: e.target.value } as any)} />
+                </label>
+
+                <label className={styles.label}>
+                  <span>Payment Intent</span>
+                  <select className={styles.select} value={(state as any).paymentIntent} onChange={(e) => patch({ paymentIntent: e.target.value } as any)}>
+                    <option value="pay_now">Pay now</option>
+                    <option value="installment_plan">Installment plan</option>
+                    <option value="dispute">Dispute</option>
+                  </select>
+                </label>
+
+                {(state as any).paymentIntent === 'pay_now' && (
+                  <label className={styles.label}>
+                    <span>Payment Date (optional)</span>
+                    <input className={styles.input} type="date" value={(state as any).paymentDate || ''} onChange={(e) => patch({ paymentDate: e.target.value } as any)} />
+                  </label>
+                )}
+
+                {(state as any).paymentIntent === 'dispute' && (
+                  <label className={styles.label} style={{ gridColumn: '1 / -1' }}>
+                    <span>Dispute Explanation (optional)</span>
+                    <textarea className={styles.textarea} value={(state as any).disputeExplanation || ''} onChange={(e) => patch({ disputeExplanation: e.target.value } as any)} />
+                  </label>
+                )}
+              </div>
+            )}
+
+            <div className={styles.hint}>
+              Tip: try a small test (Notice Number + Date + Tax Year + one amount) and click Generate to confirm end-to-end output.
+            </div>
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.previewHeader}>
+              <strong>Preview</strong>
+              <button type="button" onClick={() => navigator.clipboard.writeText(output)} className={styles.btnSmall}>
+                Copy
+              </button>
+            </div>
+            <div className={styles.previewBody}>
+              <pre className={styles.pre}>{output || 'Generate a draft to preview it here.'}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}

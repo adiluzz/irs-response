@@ -1,0 +1,317 @@
+===== FILE: /app/notice/page.tsx =====
+'use client'
+
+import { useMemo, useState } from 'react'
+import { NoticeType } from '../../types'
+import { supportedNotices } from '../../lib/notices'
+import { generateLetter } from '../../lib/templates'
+
+type Base = {
+  noticeNumber: string
+  noticeDate: string
+  taxYear: string
+}
+
+type State =
+  | (Base & {
+      noticeType: NoticeType.CP14 | NoticeType.CP501
+      balanceDue: string
+      paymentIntent: 'pay_now' | 'installment_plan' | 'dispute'
+      paymentDate?: string
+      disputeExplanation?: string
+    })
+  | (Base & {
+      noticeType: NoticeType.CP2000
+      underreportedAmount: string
+      proposedTaxDue: string
+      disagreementReason: 'already_reported' | 'incorrect_amount' | 'not_my_income' | 'other'
+      disagreementExplanation?: string
+    })
+
+export default function NoticePage() {
+  const allowedNotices = useMemo(() => {
+    const allowed = new Set([NoticeType.CP14, NoticeType.CP2000, NoticeType.CP501])
+    return supportedNotices.filter((n) => allowed.has(n.type))
+  }, [])
+
+  const [state, setState] = useState<State>({
+    noticeType: NoticeType.CP14,
+    noticeNumber: '',
+    noticeDate: '',
+    taxYear: '',
+    balanceDue: '',
+    paymentIntent: 'pay_now',
+    paymentDate: '',
+    disputeExplanation: '',
+  } as any)
+
+  const [output, setOutput] = useState('')
+
+  function patch(p: Partial<State>) {
+    setState((prev) => ({ ...prev, ...p } as any))
+  }
+
+  function changeType(next: NoticeType) {
+    setOutput('')
+    if (next === NoticeType.CP2000) {
+      setState({
+        noticeType: NoticeType.CP2000,
+        noticeNumber: '',
+        noticeDate: '',
+        taxYear: '',
+        underreportedAmount: '',
+        proposedTaxDue: '',
+        disagreementReason: 'already_reported',
+        disagreementExplanation: '',
+      } as any)
+      return
+    }
+
+    if (next === NoticeType.CP501) {
+      setState({
+        noticeType: NoticeType.CP501,
+        noticeNumber: '',
+        noticeDate: '',
+        taxYear: '',
+        balanceDue: '',
+        paymentIntent: 'pay_now',
+        paymentDate: '',
+        disputeExplanation: '',
+      } as any)
+      return
+    }
+
+    setState({
+      noticeType: NoticeType.CP14,
+      noticeNumber: '',
+      noticeDate: '',
+      taxYear: '',
+      balanceDue: '',
+      paymentIntent: 'pay_now',
+      paymentDate: '',
+      disputeExplanation: '',
+    } as any)
+  }
+
+  function onGenerate() {
+    try {
+      const nt = state.noticeType
+
+      const common = {
+        noticeNumber: state.noticeNumber,
+        noticeDate: state.noticeDate,
+        taxYear: state.taxYear,
+      }
+
+      let data: any
+
+      if (nt === NoticeType.CP2000) {
+        data = {
+          ...common,
+          underreportedAmount: Number((state as any).underreportedAmount || 0),
+          proposedTaxDue: Number((state as any).proposedTaxDue || 0),
+          disagreementReason: (state as any).disagreementReason,
+          disagreementExplanation: (state as any).disagreementExplanation || undefined,
+        }
+      } else {
+        data = {
+          ...common,
+          balanceDue: Number((state as any).balanceDue || 0),
+          paymentIntent: (state as any).paymentIntent,
+          paymentDate: (state as any).paymentDate || undefined,
+          disputeExplanation: (state as any).disputeExplanation || undefined,
+        }
+      }
+
+      setOutput(generateLetter(nt, data))
+    } catch (e: any) {
+      setOutput(`ERROR: ${e?.message || String(e)}`)
+    }
+  }
+
+  const ui = {
+    page: {
+      minHeight: '100vh',
+      padding: 28,
+      background: '#070707',
+      color: '#f2f2f2',
+      fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
+    } as const,
+    wrap: { maxWidth: 1180, margin: '0 auto' } as const,
+    h1: { fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: 0.2 } as const,
+    sub: { marginTop: 8, marginBottom: 18, color: 'rgba(242,242,242,0.75)' } as const,
+    grid: { display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: 18 } as const,
+    card: {
+      border: '1px solid rgba(255,255,255,0.10)',
+      borderRadius: 14,
+      padding: 16,
+      background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.45)',
+    } as const,
+    label: { display: 'grid', gap: 6, color: 'rgba(242,242,242,0.85)', fontSize: 13 } as const,
+    input: {
+      border: '1px solid rgba(255,255,255,0.14)',
+      borderRadius: 10,
+      padding: '10px 12px',
+      background: 'rgba(0,0,0,0.40)',
+      color: '#fff',
+      outline: 'none',
+    } as const,
+    textarea: {
+      border: '1px solid rgba(255,255,255,0.14)',
+      borderRadius: 10,
+      padding: '10px 12px',
+      background: 'rgba(0,0,0,0.40)',
+      color: '#fff',
+      outline: 'none',
+      minHeight: 110,
+      resize: 'vertical' as const,
+    } as const,
+    btn: {
+      border: '1px solid rgba(255,255,255,0.16)',
+      background: 'rgba(0,0,0,0.35)',
+      color: '#fff',
+      padding: '10px 14px',
+      borderRadius: 12,
+      cursor: 'pointer',
+      fontWeight: 800,
+      letterSpacing: 0.2,
+    } as const,
+    btnSmall: {
+      border: '1px solid rgba(255,255,255,0.16)',
+      background: 'rgba(0,0,0,0.35)',
+      color: '#fff',
+      padding: '6px 10px',
+      borderRadius: 10,
+      cursor: 'pointer',
+      fontWeight: 700,
+    } as const,
+    hr: { height: 1, background: 'rgba(255,255,255,0.08)', border: 'none', margin: '14px 0' } as const,
+    pre: {
+      whiteSpace: 'pre-wrap' as const,
+      wordBreak: 'break-word' as const,
+      margin: 0,
+      fontSize: 13,
+      lineHeight: 1.45,
+      color: 'rgba(242,242,242,0.92)',
+    } as const,
+  }
+
+  return (
+    <main style={ui.page}>
+      <div style={ui.wrap}>
+        <h1 style={ui.h1}>TAC Response Notice Wizard</h1>
+        <p style={ui.sub}>Select a notice type, enter values, then generate a draft response letter.</p>
+
+        <div style={ui.grid}>
+          <div style={ui.card}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'end', marginBottom: 12 }}>
+              <label style={{ ...ui.label, flex: 1 }}>
+                <span>Notice Type</span>
+                <select value={state.noticeType} onChange={(e) => changeType(e.target.value as any)} style={ui.input}>
+                  {allowedNotices.map((n) => (
+                    <option key={n.type} value={n.type}>
+                      {n.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button type="button" onClick={onGenerate} style={ui.btn}>
+                Generate
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <label style={ui.label}>
+                <span>Notice Number</span>
+                <input value={state.noticeNumber} onChange={(e) => patch({ noticeNumber: e.target.value } as any)} style={ui.input} />
+              </label>
+
+              <label style={ui.label}>
+                <span>Notice Date</span>
+                <input type="date" value={state.noticeDate} onChange={(e) => patch({ noticeDate: e.target.value } as any)} style={ui.input} />
+              </label>
+
+              <label style={ui.label}>
+                <span>Tax Year</span>
+                <input value={state.taxYear} onChange={(e) => patch({ taxYear: e.target.value } as any)} style={ui.input} />
+              </label>
+            </div>
+
+            <hr style={ui.hr} />
+
+            {state.noticeType === NoticeType.CP2000 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <label style={ui.label}>
+                  <span>Underreported Amount</span>
+                  <input value={(state as any).underreportedAmount} onChange={(e) => patch({ underreportedAmount: e.target.value } as any)} style={ui.input} />
+                </label>
+
+                <label style={ui.label}>
+                  <span>Proposed Tax Due</span>
+                  <input value={(state as any).proposedTaxDue} onChange={(e) => patch({ proposedTaxDue: e.target.value } as any)} style={ui.input} />
+                </label>
+
+                <label style={ui.label}>
+                  <span>Disagreement Reason</span>
+                  <select value={(state as any).disagreementReason} onChange={(e) => patch({ disagreementReason: e.target.value } as any)} style={ui.input}>
+                    <option value="already_reported">Already reported</option>
+                    <option value="incorrect_amount">Incorrect amount</option>
+                    <option value="not_my_income">Not my income</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+
+                <label style={{ ...ui.label, gridColumn: '1 / -1' }}>
+                  <span>Explanation (optional)</span>
+                  <textarea value={(state as any).disagreementExplanation || ''} onChange={(e) => patch({ disagreementExplanation: e.target.value } as any)} style={ui.textarea} />
+                </label>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <label style={ui.label}>
+                  <span>Balance Due</span>
+                  <input value={(state as any).balanceDue} onChange={(e) => patch({ balanceDue: e.target.value } as any)} style={ui.input} />
+                </label>
+
+                <label style={ui.label}>
+                  <span>Payment Intent</span>
+                  <select value={(state as any).paymentIntent} onChange={(e) => patch({ paymentIntent: e.target.value } as any)} style={ui.input}>
+                    <option value="pay_now">Pay now</option>
+                    <option value="installment_plan">Installment plan</option>
+                    <option value="dispute">Dispute</option>
+                  </select>
+                </label>
+
+                {(state as any).paymentIntent === 'pay_now' && (
+                  <label style={ui.label}>
+                    <span>Payment Date (optional)</span>
+                    <input type="date" value={(state as any).paymentDate || ''} onChange={(e) => patch({ paymentDate: e.target.value } as any)} style={ui.input} />
+                  </label>
+                )}
+
+                {(state as any).paymentIntent === 'dispute' && (
+                  <label style={{ ...ui.label, gridColumn: '1 / -1' }}>
+                    <span>Dispute Explanation (optional)</span>
+                    <textarea value={(state as any).disputeExplanation || ''} onChange={(e) => patch({ disputeExplanation: e.target.value } as any)} style={ui.textarea} />
+                  </label>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div style={ui.card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+              <strong>Preview</strong>
+              <button type="button" onClick={() => navigator.clipboard.writeText(output)} style={ui.btnSmall}>
+                Copy
+              </button>
+            </div>
+            <pre style={ui.pre}>{output || 'Generate a draft to preview it here.'}</pre>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
