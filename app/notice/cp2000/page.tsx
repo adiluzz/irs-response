@@ -1,7 +1,7 @@
 // app/notice/cp2000/page.tsx
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { SplitView } from '@/components/layout/SplitView';
 import { FormPanel } from '@/components/layout/FormPanel';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/components/forms';
 import { Button } from '@/components/ui/Button';
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
+import { LetterPreview } from '@/components/preview/LetterPreview';
 
 function formatSSN(value: string): string {
   const digits = value.replace(/\D/g, '');
@@ -75,10 +76,19 @@ export default function CP2000Page() {
   const [validationError, setValidationError] = useState('');
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
 
+  // Preview scroll container ref (used to force scrollTop=0 after generation)
+  const previewScrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasGenerated) return;
+
+    requestAnimationFrame(() => {
+      if (previewScrollRef.current) previewScrollRef.current.scrollTop = 0;
+    });
+  }, [hasGenerated, generatedOutput]);
+
   const handleChange = useCallback(
-    (
-      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-    ) => {
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       setFormData((prev) => ({
         ...prev,
         [e.target.name]: e.target.value,
@@ -127,6 +137,7 @@ export default function CP2000Page() {
       return;
     }
 
+    // ✅ FIXED: remove bogus formData.differenceType usage (does not exist)
     const discrepancyLine = formData.discrepancyType
       ? `Discrepancy Type: ${getDiscrepancyLabel(formData.discrepancyType)}`
       : '';
@@ -153,14 +164,13 @@ export default function CP2000Page() {
         discrepancyType: formData.discrepancyType || '',
         explanation: explanationCombined || '',
         position: formData.responsePosition || '',
-        includeReferences, // ✅ boolean, single source of truth
+        includeReferences, // ✅ single source of truth
       };
 
       const blueprint = getBlueprint(ctx.noticeType);
       const letterData = blueprint.build(ctx);
 
-      // ✅ DO NOT append "References" here.
-      // Global (and only global) decides whether to include authority sections.
+      // ✅ DO NOT append/move/remove "References" here. Engine owns ordering.
       const result = composeLetter({
         ...letterData,
         todayISO: new Date().toISOString().split('T')[0],
@@ -352,11 +362,7 @@ export default function CP2000Page() {
             </Select>
           </FormField>
 
-          <FormField
-            label="Explanation and Supporting Information"
-            htmlFor="explanation"
-            hint="Recommended"
-          >
+          <FormField label="Explanation and Supporting Information" htmlFor="explanation" hint="Recommended">
             <Textarea
               id="explanation"
               name="explanation"
@@ -447,7 +453,9 @@ export default function CP2000Page() {
 
       <aside
         style={{
-          width: 'var(--preview-width)',
+          width: '520px',
+          minWidth: '520px',
+          maxWidth: '520px',
           flexShrink: 0,
           backgroundColor: 'var(--gray-100)',
           borderLeft: '1px solid var(--gray-200)',
@@ -484,19 +492,26 @@ export default function CP2000Page() {
             </p>
           </div>
 
-          {hasGenerated && (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button variant="ghost" size="sm" onClick={handleCopy}>
-                {copyState === 'copied' ? 'Copied' : 'Copy'}
-              </Button>
-              <Button variant="secondary" size="sm" onClick={handleDownload}>
-                Download
-              </Button>
-            </div>
-          )}
+          {/* ✅ always visible; disabled until output exists */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button variant="ghost" size="sm" onClick={handleCopy} disabled={!generatedOutput}>
+              {copyState === 'copied' ? 'Copied' : 'Copy'}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleDownload} disabled={!generatedOutput}>
+              Download
+            </Button>
+          </div>
         </header>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: '24px 20px' }}>
+        <div
+          ref={previewScrollRef}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            padding: '24px 20px',
+          }}
+        >
           {hasGenerated ? (
             <div
               style={{
@@ -508,19 +523,8 @@ export default function CP2000Page() {
                 minHeight: '600px',
               }}
             >
-              <pre
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '12px',
-                  lineHeight: '1.7',
-                  color: 'var(--gray-800)',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  margin: 0,
-                }}
-              >
-                {generatedOutput}
-              </pre>
+              {/* ✅ same finished typography as other notices */}
+              <LetterPreview payload={{ rendered: generatedOutput }} />
             </div>
           ) : (
             <div
@@ -534,38 +538,10 @@ export default function CP2000Page() {
                 color: 'var(--gray-400)',
               }}
             >
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--gray-200)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '16px',
-                }}
-              >
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14,2 14,8 20,8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-              </div>
               <p style={{ fontWeight: 500, color: 'var(--gray-500)', marginBottom: '4px' }}>
                 Awaiting Input
               </p>
-              <p style={{ fontSize: '12px' }}>
-                Complete required fields and click Generate
-              </p>
+              <p style={{ fontSize: '12px' }}>Complete required fields and click Generate</p>
             </div>
           )}
         </div>
@@ -573,4 +549,3 @@ export default function CP2000Page() {
     </SplitView>
   );
 }
-
