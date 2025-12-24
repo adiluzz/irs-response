@@ -8,6 +8,7 @@ export function LetterPreview({ payload }: LetterPreviewProps) {
   return (
     <pre
       className="
+        watermark-root
         whitespace-pre-wrap
         font-serif
         text-sm

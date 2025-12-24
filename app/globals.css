@@ -7,7 +7,9 @@
 }
 
 :root {
-  /* Neutrals */
+  /* ─────────────────────────────────────────────────────────
+     NEUTRALS
+  ───────────────────────────────────────────────────────── */
   --gray-25: #fcfcfd;
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
@@ -21,54 +23,149 @@
   --gray-900: #111827;
   --gray-950: #030712;
 
-  /* Primary */
+  /* ─────────────────────────────────────────────────────────
+     PRIMARY (Authority Blue)
+  ───────────────────────────────────────────────────────── */
   --blue-50: #eff6ff;
   --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
   --blue-500: #3b82f6;
   --blue-600: #2563eb;
   --blue-700: #1d4ed8;
 
-  /* Semantic */
+  /* ─────────────────────────────────────────────────────────
+     SEMANTIC
+  ───────────────────────────────────────────────────────── */
   --red-50: #fef2f2;
+  --red-100: #fee2e2;
   --red-600: #dc2626;
   --green-50: #f0fdf4;
   --green-600: #16a34a;
   --amber-50: #fffbeb;
   --amber-600: #d97706;
 
-  /* Layout */
+  /* ─────────────────────────────────────────────────────────
+     BRAND (F3)
+  ───────────────────────────────────────────────────────── */
+  --brand-gold-500: #b89b5e;
+  --brand-gold-700: #8f7a3d;
+
+  /* ─────────────────────────────────────────────────────────
+     PREVIEW WATERMARK (FREE vs PAID)
+  ───────────────────────────────────────────────────────── */
+  --wm-pane-opacity-free: 0.06;
+  --wm-pane-opacity-paid: 0.00;
+  --wm-pane-size-free: 360px;
+  --wm-pane-y: 52%;
+
+  --wm-mark-size: 56px;
+  --wm-mark-opacity: 0.14;
+  --wm-mark-offset: 18px;
+
+  /* ─────────────────────────────────────────────────────────
+     LAYOUT
+  ───────────────────────────────────────────────────────── */
   --topbar-height: 56px;
   --sidebar-width: 256px;
+  --preview-width: 520px;
 
-  /* Typography */
+  /* ─────────────────────────────────────────────────────────
+     TYPOGRAPHY
+  ───────────────────────────────────────────────────────── */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --font-mono: 'SF Mono', Consolas, Menlo, monospace;
 
-  /* Borders */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* ─────────────────────────────────────────────────────────
+     SPACING
+  ───────────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* ─────────────────────────────────────────────────────────
+     SHADOWS
+  ───────────────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08);
+  --shadow-paper: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03);
+
+  /* ─────────────────────────────────────────────────────────
+     RADII
+  ───────────────────────────────────────────────────────── */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
+
+  /* ─────────────────────────────────────────────────────────
+     FOCUS
+  ───────────────────────────────────────────────────────── */
+  --ring-width: 3px;
+  --ring-color: var(--blue-100);
+  --ring-color-error: var(--red-100);
+
+  /* ─────────────────────────────────────────────────────────
+     TRANSITIONS
+  ───────────────────────────────────────────────────────── */
+  --transition-fast: 100ms ease;
+  --transition-base: 150ms ease;
 }
 
-html,
+html {
+  height: 100%;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   height: 100%;
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
   color: var(--gray-900);
   background-color: var(--gray-50);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue-500);
+  outline-offset: 2px;
+}
+
 button {
   font-family: inherit;
+  font-size: inherit;
   cursor: pointer;
+  background: none;
+  border: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 input,
@@ -76,4 +173,172 @@ select,
 textarea {
   font-family: inherit;
   font-size: inherit;
+  line-height: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--gray-400);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--gray-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--gray-400);
+}
+
+::selection {
+  background-color: var(--blue-100);
+  color: var(--gray-900);
+}
+/* ─────────────────────────────────────────────────────────
+   PREMIUM PANEL FRAMING (Investor polish)
+   Drop-in layer — do not replace base styles
+───────────────────────────────────────────────────────── */
+
+.panel-surface {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(249, 250, 251, 0.92)
+  );
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-paper);
+}
+
+.gold-frame {
+  position: relative;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(184, 155, 94, 0.55); /* brand gold */
+  box-shadow:
+    0 0 0 1px rgba(184, 155, 94, 0.15) inset,
+    0 18px 48px rgba(0, 0, 0, 0.12);
+}
+
+.gold-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(
+    900px 260px at 30% 0%,
+    rgba(184, 155, 94, 0.12),
+    transparent 60%
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+   BUTTON MICRO-INTERACTIONS (fast + intentional)
+───────────────────────────────────────────────────────── */
+
+button {
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  filter: brightness(1.03);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow-md);
+}
+body { outline: 6px solid magenta; }
+/* ─────────────────────────────────────────────────────────
+   SIDEBAR NAV: hover + active (premium micro-interactions)
+───────────────────────────────────────────────────────── */
+
+/* generic: works for <a> or <button> inside an <aside> sidebar */
+aside a,
+aside button {
+  display: block;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 2px 6px;
+  color: var(--gray-900);
+  text-decoration: none;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+/* hover pop */
+aside a:hover,
+aside button:hover {
+  transform: translateY(-1px);
+  background: rgba(184, 155, 94, 0.10);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10);
+}
+
+/* active/selected (keep your existing blue highlight, add a gold edge) */
+aside a[aria-current='page'],
+aside a.active,
+aside button[aria-current='page'],
+aside button.active {
+  box-shadow: inset 2px 0 0 rgba(184, 155, 94, 0.85);
+}
+/* ─────────────────────────────────────────────────────────
+   SIDEBAR NAV — gold outline (final polish)
+───────────────────────────────────────────────────────── */
+
+aside a,
+aside button {
+  position: relative;
+  outline: 0;
+}
+
+/* gold outline on hover */
+aside a:hover,
+aside button:hover {
+  outline: 1px solid rgba(184, 155, 94, 0.45);
+  outline-offset: -1px;
+}
+
+/* stronger gold outline when active/selected */
+aside a[aria-current='page'],
+aside a.active,
+aside button[aria-current='page'],
+aside button.active {
+  outline: 1px solid rgba(184, 155, 94, 0.75);
+  outline-offset: -1px;
+  background: rgba(184, 155, 94, 0.08);
+}
+/* ─────────────────────────────────────────────────────────
+   LETTER PREVIEW WATERMARK (Document Body Only)
+───────────────────────────────────────────────────────── */
+
+.watermark-root {
+  position: relative;
+}
+
+.watermark-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/watermarks/g3-logo-watermark.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 420px;
+  opacity: 0.045;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* keep letter text above watermark */
+.watermark-root > * {
+  position: relative;
+  z-index: 1;
 }

@@ -11,9 +11,7 @@ import {
 
 export type CP91Input = Omit<LevyIntentFamilyInput, 'noticeType'>
 
-export function composeCP91(
-  input: CP91Input
-): ComposeResult {
+export function composeCP91(input: CP91Input): ComposeResult {
   const fullInput: LevyIntentFamilyInput = {
     ...input,
     noticeType: LevyNoticeType.CP91,

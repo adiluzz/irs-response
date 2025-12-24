@@ -1,45 +1,67 @@
-import React from 'react';
+import React from 'react'
 
 interface FormPanelProps {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
+  title: string
+  subtitle?: string
+  children: React.ReactNode
 }
 
-export function FormPanel({ title, subtitle, children }: FormPanelProps) {
+export function FormPanel({ children }: FormPanelProps) {
   return (
     <div
       style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '32px',
+        padding: 'var(--space-8)',
         backgroundColor: 'var(--gray-50)',
       }}
     >
-      {/* Page header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1
+      {/* Brand header (LOGO + NAME ONLY) */}
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <div
           style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: 'var(--gray-900)',
-            marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center', // ⬅ centers text with logo
+            gap: '24px',
           }}
         >
-          {title}
-        </h1>
-        {subtitle && (
-          <p
+          <img
+            src="/brand/f3-crest.png"
+            alt="F3"
             style={{
-              fontSize: '15px',
-              color: 'var(--gray-500)',
-              lineHeight: 1.5,
-              maxWidth: '600px',
+              width: '132px',
+              height: '132px',
+              objectFit: 'contain',
+              opacity: 0.98,
+            }}
+          />
+
+          <div
+            style={{
+              fontSize: 'calc(var(--text-xl) * 2)',
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              color: 'var(--gray-900)',
+              lineHeight: 1.1,
             }}
           >
-            {subtitle}
-          </p>
-        )}
+            TAC Response Engine
+          </div>
+        </div>
+      </div>
+
+      {/* Descriptive line (MOVED HERE, ONCE) */}
+      <div
+        style={{
+          marginBottom: 'var(--space-6)',
+          fontSize: 'calc(var(--text-md) * 1.25)',
+          fontStyle: 'italic',
+          color: 'var(--gray-600)',
+          maxWidth: '720px',
+          lineHeight: 'var(--leading-relaxed)',
+        }}
+      >
+        Deterministic IRS Notice Correspondence &amp; Resolution Platform
       </div>
 
       {/* Form card */}
@@ -48,12 +70,13 @@ export function FormPanel({ title, subtitle, children }: FormPanelProps) {
           backgroundColor: '#ffffff',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--gray-200)',
-          padding: '32px',
+          boxShadow: 'var(--shadow-xs)',
+          padding: 'var(--space-8)',
           maxWidth: '720px',
         }}
       >
         {children}
       </div>
     </div>
-  );
+  )
 }

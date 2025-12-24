@@ -1,16 +1,16 @@
-import type { Metadata } from 'next';
-import { AppShell } from '@/components/shell/AppShell';
-import './globals.css';
+import type { Metadata } from 'next'
+import { AppShell } from '@/components/shell/AppShell'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: 'TAC Emergency IRS Responder',
   description: 'Professional IRS notice response generation platform',
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
@@ -18,5 +18,5 @@ export default function RootLayout({
         <AppShell>{children}</AppShell>
       </body>
     </html>
-  );
+  )
 }

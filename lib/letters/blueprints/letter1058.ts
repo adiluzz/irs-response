@@ -11,9 +11,7 @@ import {
 
 export type Letter1058Input = Omit<LevyIntentFamilyInput, 'noticeType'>
 
-export function composeLetter1058(
-  input: Letter1058Input
-): ComposeResult {
+export function composeLetter1058(input: Letter1058Input): ComposeResult {
   const fullInput: LevyIntentFamilyInput = {
     ...input,
     noticeType: LevyNoticeType.LETTER_1058,

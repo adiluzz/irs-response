@@ -10,7 +10,7 @@ import {
   underreporterRequestedActions,
 } from '../library/families/underreporter_exam'
 
-type Section = { heading: string; body?: string }
+type Section = { heading?: string; body?: string }
 
 function normalizeHeading(h: string) {
   return (h || '').trim().toLowerCase()
@@ -35,8 +35,8 @@ function enforceAuthorityLastOnce(sections: Section[], includeReferences: boolea
   const ref: Section[] = []
 
   for (const s of sections) {
-    if (!s || typeof s.heading !== 'string') continue
-    if (isAuthorityOrReferencesHeading(s.heading)) ref.push(s)
+    if (!s) continue
+    if (typeof s.heading === 'string' && isAuthorityOrReferencesHeading(s.heading)) ref.push(s)
     else nonRef.push(s)
   }
 
@@ -98,10 +98,16 @@ export const cp2000Blueprint: Blueprint = {
     // ✅ Hard rule for CP2000: authority/references appear once and always last (only if includeReferences=true)
     const sections = enforceAuthorityLastOnce(assembled, Boolean(ctx.includeReferences))
 
+    // ✅ Blueprint contract requires body: string (never undefined)
+    const normalizedSections = sections.map((s) => ({
+      heading: typeof s.heading === 'string' ? s.heading : undefined,
+      body: s.body ?? '',
+    }))
+
     return {
       reLine: `CP2000 Underreporter Notice - Tax Year ${ctx.taxYear || '[year]'} - ${ctx.idValue || '[ID]'}`,
       taxpayerBlock: `Taxpayer: ${ctx.taxpayerName}\n${ctx.taxpayerAddress || ''}`,
-      sections,
+      sections: normalizedSections,
       closingBlock: globalClosing(seed, ctx),
       certifiedMail: true,
     }

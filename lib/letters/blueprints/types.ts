@@ -16,6 +16,9 @@ export type NoticeType =
   | 'CP504'
   | 'CP2000'
   | 'FORM_843'
+  | 'LETTER_1058'
+  | 'CP90'
+  | 'CP91'
 
 export type LetterContext = {
   noticeType: NoticeType

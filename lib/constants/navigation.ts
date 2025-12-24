@@ -1,16 +1,16 @@
-export type NavItemStatus = 'active' | 'available' | 'coming-soon' | 'disabled';
+export type NavItemStatus = 'active' | 'available' | 'coming-soon' | 'disabled'
 
 export interface NavItem {
-  id: string;
-  label: string;
-  href?: string;
-  status: NavItemStatus;
+  id: string
+  label: string
+  href?: string
+  status: NavItemStatus
 }
 
 export interface NavCategory {
-  id: string;
-  title: string;
-  items: NavItem[];
+  id: string
+  title: string
+  items: NavItem[]
 }
 
 export const navigation: NavCategory[] = [
@@ -37,9 +37,10 @@ export const navigation: NavCategory[] = [
     id: 'collection',
     title: 'Collection & Enforcement',
     items: [
-      { id: 'cp90', label: 'CP90 / CP91', status: 'coming-soon' },
+      { id: 'cp90', label: 'CP90', href: '/notice/cp90', status: 'available' },
+      { id: 'cp91', label: 'CP91', href: '/notice/cp91', status: 'available' },
       { id: 'lt11', label: 'LT11', status: 'coming-soon' },
-      { id: 'letter-1058', label: 'Letter 1058', status: 'coming-soon' },
+      { id: 'letter-1058', label: 'Letter 1058', href: '/notice/letter1058', status: 'available' },
       { id: 'levy-notice', label: 'Levy Notices', status: 'coming-soon' },
       { id: 'tax-lien', label: 'Notice of Federal Tax Lien', status: 'coming-soon' },
     ],
@@ -61,4 +62,4 @@ export const navigation: NavCategory[] = [
       { id: 'offer-compromise', label: 'Offer in Compromise', status: 'coming-soon' },
     ],
   },
-];
+]
