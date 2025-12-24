@@ -1,52 +1,63 @@
 /**
- * GLOBAL language library - used in EVERY letter
+ * Global shared sections for all letters
  */
 
-import { stableSeed, pickVariant } from '../variation'
 import type { LetterContext } from '../blueprints/types'
+import { pickVariant } from '../variation'
+import { educationalReferences } from '../educationalReferences'
 
-export function globalSections(seed: string, ctx: LetterContext): Array<{ heading?: string; body: string }> {
-  const sections = []
+function safe(value: string | undefined, fallback: string) {
+  return value && value.trim() ? value.trim() : fallback
+}
 
-  // Procedural framing
+export function globalSections(
+  seed: string,
+  ctx: LetterContext
+): Array<{ heading?: string; body: string }> {
+  const sections: Array<{ heading?: string; body: string }> = []
+
+  // Header / purpose (deterministic, non-assertive)
   sections.push({
-    body: pickVariant(seed, [
-      `This correspondence is submitted in response to the referenced notice dated ${ctx.noticeDate || '[date]'}. This response is provided timely and in accordance with applicable procedures.`,
-      `This letter responds to the notice referenced above, dated ${ctx.noticeDate || '[date]'}. The response is submitted within the prescribed timeframe and follows proper procedures.`,
-      `This correspondence addresses the notice dated ${ctx.noticeDate || '[date]'} as referenced above. It is submitted in a timely manner pursuant to applicable guidelines.`,
-    ])
+    heading: 'Purpose',
+    body: pickVariant(seed + '_purpose', [
+      `This correspondence is submitted regarding the referenced notice and tax period. The taxpayer requests that the Service review the account and respond in writing to the items raised in this submission.`,
+      `This letter is provided in response to the referenced notice. The taxpayer requests review and written confirmation of the account status and any actions taken by the Service.`,
+      `This submission addresses the referenced IRS notice and tax period. The taxpayer requests an account-level review and written response regarding the matters discussed below.`,
+    ]),
   })
 
-  // Good-faith compliance posture
+  // Identifiers (use only what is provided)
   sections.push({
-    body: pickVariant(seed + '_compliance', [
-      'This response is provided in good faith with full cooperation. The taxpayer has consistently sought to comply with all applicable tax obligations and reporting requirements.',
-      'The taxpayer submits this response in good faith and maintains a posture of full cooperation with the Service. All tax obligations have been approached with diligence and care.',
-      'This submission reflects the taxpayer\'s good-faith effort to address the matter and cooperate fully. The taxpayer remains committed to meeting all tax compliance obligations.',
-    ])
+    heading: 'Taxpayer Information',
+    body: [
+      `Taxpayer: ${safe(ctx.taxpayerName, '[name]')}`,
+      ctx.idValue ? `ID: ${ctx.idValue}` : '',
+      ctx.taxYear ? `Tax Year: ${ctx.taxYear}` : '',
+      ctx.noticeDate ? `Notice Date: ${ctx.noticeDate}` : '',
+      ctx.noticeNumber ? `Notice Number: ${ctx.noticeNumber}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n'),
   })
+
+  // OPTIONAL references appended as a real section (checkbox)
+  // Triggered ONLY if ctx.includeReferences === true
+  if (ctx.includeReferences === true) {
+    sections.push({
+      heading: 'Applicable Authority',
+      body: educationalReferences().join('\n'),
+    })
+  }
 
   return sections
 }
 
 export function globalClosing(seed: string, ctx: LetterContext): string {
-  const recordKeeping = pickVariant(seed + '_records', [
-    'Please review the information provided and update your records accordingly.',
-    'Kindly review this submission and adjust your records as appropriate.',
-    'We request that you review this information and update your files accordingly.',
-  ])
+  const name = safe(ctx.taxpayerName, '[name]')
 
-  const writtenResponse = pickVariant(seed + '_response', [
-    'If additional documentation or clarification is required, please specify the items needed in writing.',
-    'Should further information be necessary, please provide a written request detailing the specific items required.',
-    'If the Service requires additional documentation, please issue a written specification of the needed materials.',
+  return pickVariant(seed + '_closing', [
+    `Respectfully submitted,\n\n______________________________\n${name}`,
+    `Sincerely,\n\n______________________________\n${name}`,
+    `Respectfully,\n\n______________________________\n${name}`,
   ])
-
-  const contact = pickVariant(seed + '_contact', [
-    'Please direct all correspondence regarding this matter to the undersigned.',
-    'All future correspondence concerning this matter should be directed to the undersigned.',
-    'Kindly address any further communications on this matter to the undersigned.',
-  ])
-
-  return `${recordKeeping}\n\n${writtenResponse}\n\n${contact}\n\nRespectfully submitted,\n\n[Authorized Representative Name]\n[Credentials]\n[Contact Information]`
 }

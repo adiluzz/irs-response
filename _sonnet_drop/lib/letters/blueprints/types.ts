@@ -31,13 +31,8 @@ export type LetterContext = {
   discrepancyType?: string
   explanation?: string
   priorActions?: string
-
-  // Engine flags / structured hints
-  includeReferences?: boolean
-  balanceDueReason?: string
-
-  // Allow safe extension without refactors
-  [key: string]: string | number | boolean | undefined
+  // Additional context fields as needed
+  [key: string]: string | undefined
 }
 
 export type Blueprint = {

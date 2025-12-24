@@ -1,3 +1,4 @@
+// app/notice/cp2000/page.tsx
 'use client';
 
 import React, { useState, useCallback } from 'react';
@@ -67,13 +68,17 @@ export default function CP2000Page() {
     explanation: '',
   });
 
+  const [includeReferences, setIncludeReferences] = useState(false);
+
   const [generatedOutput, setGeneratedOutput] = useState('');
   const [hasGenerated, setHasGenerated] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    (
+      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    ) => {
       setFormData((prev) => ({
         ...prev,
         [e.target.name]: e.target.value,
@@ -99,6 +104,7 @@ export default function CP2000Page() {
       responsePosition: '',
       explanation: '',
     });
+    setIncludeReferences(false);
     setGeneratedOutput('');
     setHasGenerated(false);
     setValidationError('');
@@ -110,6 +116,7 @@ export default function CP2000Page() {
 
     const missingFields: string[] = [];
     if (!formData.taxpayerName.trim()) missingFields.push('Full Legal Name');
+    if (!formData.taxpayerAddress.trim()) missingFields.push('Mailing Address');
     if (!formData.taxYear) missingFields.push('Tax Year');
     if (!formData.proposedAmount.trim()) missingFields.push('Proposed Amount');
     if (!formData.noticeDate) missingFields.push('Notice Date');
@@ -119,6 +126,18 @@ export default function CP2000Page() {
       setValidationError(`Required: ${missingFields.join(', ')}`);
       return;
     }
+
+    const discrepancyLine = formData.discrepancyType
+      ? `Discrepancy Type: ${getDiscrepancyLabel(formData.discrepancyType)}`
+      : '';
+
+    const positionLine = formData.responsePosition
+      ? `Response Position: ${getPositionLabel(formData.responsePosition)}`
+      : '';
+
+    const explanationCombined = [positionLine, discrepancyLine, formData.explanation]
+      .filter(Boolean)
+      .join('\n\n');
 
     try {
       const ctx: LetterContext = {
@@ -132,16 +151,20 @@ export default function CP2000Page() {
         amount: formData.proposedAmount,
         deadline: formData.responseDeadline,
         discrepancyType: formData.discrepancyType || '',
-        explanation: formData.explanation || '',
+        explanation: explanationCombined || '',
         position: formData.responsePosition || '',
+        includeReferences, // ✅ boolean, single source of truth
       };
 
       const blueprint = getBlueprint(ctx.noticeType);
       const letterData = blueprint.build(ctx);
 
+      // ✅ DO NOT append "References" here.
+      // Global (and only global) decides whether to include authority sections.
       const result = composeLetter({
         ...letterData,
         todayISO: new Date().toISOString().split('T')[0],
+        includeReferences,
       });
 
       const letterBody = extractLetterBody(result);
@@ -153,7 +176,7 @@ export default function CP2000Page() {
       setHasGenerated(false);
       setValidationError(msg);
     }
-  }, [formData]);
+  }, [formData, includeReferences]);
 
   const handleCopy = useCallback(async () => {
     if (!generatedOutput) return;
@@ -181,6 +204,7 @@ export default function CP2000Page() {
 
   const canGenerate = Boolean(
     formData.taxpayerName.trim() &&
+      formData.taxpayerAddress.trim() &&
       formData.taxYear &&
       formData.proposedAmount.trim() &&
       formData.noticeDate &&
@@ -189,10 +213,7 @@ export default function CP2000Page() {
 
   return (
     <SplitView>
-      <FormPanel
-        title="TAC Emergency IRS Responder"
-        subtitle="Deterministic IRS Notice Response Engine"
-      >
+      <FormPanel title="TAC Emergency IRS Responder" subtitle="Deterministic IRS Notice Response Engine">
         <div
           style={{
             display: 'inline-flex',
@@ -250,12 +271,7 @@ export default function CP2000Page() {
             </FormField>
 
             <FormField label="Tax Year" htmlFor="taxYear" required>
-              <Select
-                id="taxYear"
-                name="taxYear"
-                value={formData.taxYear}
-                onChange={handleChange}
-              >
+              <Select id="taxYear" name="taxYear" value={formData.taxYear} onChange={handleChange}>
                 <option value="">Select year</option>
                 <option value="2024">2024</option>
                 <option value="2023">2023</option>
@@ -267,10 +283,7 @@ export default function CP2000Page() {
           </FormRow>
         </FormSection>
 
-        <FormSection
-          title="Notice Details"
-          description="Enter the specific information from your CP2000 notice."
-        >
+        <FormSection title="Notice Details" description="Enter the specific information from your CP2000 notice.">
           <FormRow columns={2}>
             <FormField label="Notice Date" htmlFor="noticeDate" required>
               <Input
@@ -324,10 +337,7 @@ export default function CP2000Page() {
           </FormRow>
         </FormSection>
 
-        <FormSection
-          title="Response Position"
-          description="Indicate your position and provide supporting information."
-        >
+        <FormSection title="Response Position" description="Indicate your position and provide supporting information.">
           <FormField label="Your Position" htmlFor="responsePosition" hint="Select one">
             <Select
               id="responsePosition"
@@ -358,6 +368,59 @@ export default function CP2000Page() {
           </FormField>
         </FormSection>
 
+        <FormSection title="Output Options" description="Configure the generated document output.">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              padding: '12px 16px',
+              backgroundColor: 'var(--gray-50)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--gray-200)',
+            }}
+          >
+            <input
+              type="checkbox"
+              id="includeReferences"
+              checked={includeReferences}
+              onChange={(e) => {
+                setIncludeReferences(e.target.checked);
+                if (hasGenerated) {
+                  setHasGenerated(false);
+                  setGeneratedOutput('');
+                }
+              }}
+              style={{
+                width: '18px',
+                height: '18px',
+                marginTop: '2px',
+                accentColor: 'var(--gray-900)',
+                cursor: 'pointer',
+              }}
+            />
+            <label
+              htmlFor="includeReferences"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                cursor: 'pointer',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 500,
+                  color: 'var(--gray-900)',
+                }}
+              >
+                Append IRS case law references to the draft
+              </span>
+            </label>
+          </div>
+        </FormSection>
+
         <FormActions align="between">
           <Button variant="ghost" type="button" onClick={handleClear}>
             Clear Form
@@ -365,13 +428,7 @@ export default function CP2000Page() {
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
             {validationError && (
-              <div
-                style={{
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--red-600)',
-                  textAlign: 'right',
-                }}
-              >
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--red-600)', textAlign: 'right' }}>
                 {validationError}
               </div>
             )}
@@ -380,12 +437,7 @@ export default function CP2000Page() {
               <Button variant="secondary" type="button" disabled>
                 Save Draft
               </Button>
-              <Button
-                variant="primary"
-                type="button"
-                disabled={!canGenerate}
-                onClick={handleGenerate}
-              >
+              <Button variant="primary" type="button" disabled={!canGenerate} onClick={handleGenerate}>
                 Generate Letter
               </Button>
             </div>
@@ -521,3 +573,4 @@ export default function CP2000Page() {
     </SplitView>
   );
 }
+

@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/Button'
 
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
+import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
 
 type CopyState = 'idle' | 'copied'
 
@@ -70,15 +71,6 @@ function parseAddressLines(multiline: string) {
   }
 }
 
-function extractLetterBody(result: unknown): string {
-  if (typeof result === 'string') return result
-  if (result && typeof result === 'object' && 'letterBody' in result) {
-    const lb = (result as { letterBody?: unknown }).letterBody
-    return typeof lb === 'string' ? lb : ''
-  }
-  return ''
-}
-
 export default function CP504Page() {
   const balanceDueReasonOptions = useMemo(
     () => [
@@ -121,6 +113,27 @@ export default function CP504Page() {
       'deduction-disallowed': 'Deduction Disallowed',
       'credit-adjustment': 'Credit Adjustment',
       other: 'Other',
+    }),
+    []
+  )
+
+  const balanceDueReasonLabels: Record<BalanceDueReason, string> = useMemo(
+    () => ({
+      unpaid_tax: 'Unpaid tax shown on return',
+      irs_adjustment: 'IRS adjustment / assessment',
+      penalty_interest: 'Penalties and interest',
+      payment_misapplied: 'Payment misapplied / not credited',
+      unknown: 'Unknown / unclear',
+      other: 'Other',
+    }),
+    []
+  )
+
+  const responsePositionLabels: Record<ResponsePosition, string> = useMemo(
+    () => ({
+      dispute: 'I dispute the balance due',
+      already_paid: 'I already paid this balance',
+      request_time_to_pay: 'I need time to pay',
     }),
     []
   )
@@ -220,8 +233,6 @@ export default function CP504Page() {
       return
     }
 
-    const parsedAddr = parseAddressLines(formData.taxpayerAddress)
-
     const discrepancyLine = formData.discrepancyType
       ? `Discrepancy Type: ${discrepancyLabels[formData.discrepancyType]}`
       : ''
@@ -231,30 +242,14 @@ export default function CP504Page() {
       .filter(Boolean)
       .join('\n\n')
 
-    const data = {
-      taxpayer: {
-        name: formData.taxpayerName,
-        address: parsedAddr.address,
-        city: parsedAddr.city,
-        state: parsedAddr.state,
-        zip: parsedAddr.zip,
-        ssn: formData.ssn ? onlyDigits(formData.ssn) : '',
-      },
-      taxYear: parseInt(formData.taxYear, 10),
-      noticeDate: formData.noticeDate,
-      noticeNumber: formData.noticeNumber,
-      amountDue: safeCurrencyInput(formData.amountDue),
-      explanation: explanationCombined,
-      discrepancyType: formData.discrepancyType,
-      balanceDueReason,
-      responsePosition,
-    }
-
-    const options = {
-      balanceDueReason,
-      responsePosition,
-      appendReferences: includeReferences,
-    }
+    // Give the engine actual “meat” instead of passing raw enum values.
+    const positionNarrative = [
+      `Response Position: ${responsePositionLabels[responsePosition]}`,
+      `Balance Due Reason: ${balanceDueReasonLabels[balanceDueReason]}`,
+      discrepancyLine,
+    ]
+      .filter(Boolean)
+      .join('\n')
 
     try {
       const ctx: LetterContext = {
@@ -267,21 +262,36 @@ export default function CP504Page() {
         taxYear: formData.taxYear,
         amount: safeCurrencyInput(formData.amountDue),
         deadline: '',
-        position: responsePosition,
+        position: positionNarrative,
         explanation: explanationCombined,
         priorActions: '',
+        // optional signals (stringy for ctx index signature)
+        balanceDueReason,
+        discrepancyType: formData.discrepancyType,
+        appendReferences: includeReferences ? 'true' : 'false',
       }
 
       const blueprint = getBlueprint(ctx.noticeType)
       const letterData = blueprint.build(ctx)
 
+      // Append references when checkbox is checked.
+      const sections = includeReferences
+        ? [
+            ...letterData.sections,
+            {
+              heading: 'References',
+              body: generateEducationalReferences().trim(),
+            },
+          ]
+        : letterData.sections
+
       const result = composeLetter({
         ...letterData,
+        sections,
         todayISO: new Date().toISOString().split('T')[0],
       })
 
-      const letterBody = extractLetterBody(result)
-      setGeneratedOutput(letterBody)
+      setGeneratedOutput(result)
       setHasGenerated(true)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Generation failed.'
@@ -295,6 +305,8 @@ export default function CP504Page() {
     balanceDueReason,
     responsePosition,
     discrepancyLabels,
+    balanceDueReasonLabels,
+    responsePositionLabels,
   ])
 
   const handleCopy = useCallback(async () => {
@@ -579,7 +591,13 @@ export default function CP504Page() {
               type="checkbox"
               id="includeReferences"
               checked={includeReferences}
-              onChange={(e) => setIncludeReferences(e.target.checked)}
+              onChange={(e) => {
+                setIncludeReferences(e.target.checked)
+                if (hasGenerated) {
+                  setHasGenerated(false)
+                  setGeneratedOutput('')
+                }
+              }}
               style={{
                 width: '18px',
                 height: '18px',

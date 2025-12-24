@@ -15,12 +15,14 @@ import {
 } from '@/components/forms'
 import { Button } from '@/components/ui/Button'
 
-import { NoticeType } from '@/types'
-import { generateLetter } from '@/lib/generators/router'
+// SWITCH: stop using legacy generator router, use the new letter engine
+import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
+import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
 
 type CopyState = 'idle' | 'copied'
 
-type ResponsePosition = 'agree' | 'partial' | 'disagree'
+// Align to your engine patterns used in CP14/CP504 pages
+type ResponsePosition = 'dispute' | 'already_paid' | 'request_time_to_pay'
 
 type BalanceDueReason =
   | 'unpaid_tax'
@@ -28,6 +30,14 @@ type BalanceDueReason =
   | 'penalty_interest'
   | 'payment_misapplied'
   | 'unknown'
+  | 'other'
+
+type DiscrepancyType =
+  | 'unreported-income'
+  | '1099-mismatch'
+  | 'w2-mismatch'
+  | 'deduction-disallowed'
+  | 'credit-adjustment'
   | 'other'
 
 function onlyDigits(value: string) {
@@ -78,14 +88,26 @@ export default function CP503Page() {
 
   const responsePositionOptions = useMemo(
     () => [
-      { value: 'agree', label: 'I agree' },
-      { value: 'partial', label: 'I partially agree' },
-      { value: 'disagree', label: 'I disagree' },
+      { value: 'dispute', label: 'I dispute the balance due' },
+      { value: 'already_paid', label: 'I already paid this balance' },
+      { value: 'request_time_to_pay', label: 'I need time to pay' },
     ],
     []
   )
 
-  const discrepancyLabels: Record<string, string> = useMemo(
+  const discrepancyTypeOptions = useMemo(
+    () => [
+      { value: 'unreported-income', label: 'Unreported Income' },
+      { value: '1099-mismatch', label: '1099 Mismatch' },
+      { value: 'w2-mismatch', label: 'W-2 Mismatch' },
+      { value: 'deduction-disallowed', label: 'Deduction Disallowed' },
+      { value: 'credit-adjustment', label: 'Credit Adjustment' },
+      { value: 'other', label: 'Other' },
+    ],
+    []
+  )
+
+  const discrepancyLabels: Record<DiscrepancyType, string> = useMemo(
     () => ({
       'unreported-income': 'Unreported Income',
       '1099-mismatch': '1099 Mismatch',
@@ -97,7 +119,38 @@ export default function CP503Page() {
     []
   )
 
-  const [formData, setFormData] = useState({
+  const balanceDueReasonLabels: Record<BalanceDueReason, string> = useMemo(
+    () => ({
+      unpaid_tax: 'Unpaid tax shown on return',
+      irs_adjustment: 'IRS adjustment / assessment',
+      penalty_interest: 'Penalties and interest',
+      payment_misapplied: 'Payment misapplied / not credited',
+      unknown: 'Unknown / unclear',
+      other: 'Other',
+    }),
+    []
+  )
+
+  const responsePositionLabels: Record<ResponsePosition, string> = useMemo(
+    () => ({
+      dispute: 'I dispute the balance due',
+      already_paid: 'I already paid this balance',
+      request_time_to_pay: 'I need time to pay',
+    }),
+    []
+  )
+
+  const [formData, setFormData] = useState<{
+    taxpayerName: string
+    taxpayerAddress: string
+    ssn: string
+    noticeDate: string
+    taxYear: string
+    amountDue: string
+    noticeNumber: string
+    discrepancyType: DiscrepancyType
+    explanation: string
+  }>({
     taxpayerName: '',
     taxpayerAddress: '',
     ssn: '',
@@ -105,13 +158,15 @@ export default function CP503Page() {
     taxYear: '',
     amountDue: '',
     noticeNumber: 'CP503',
-    discrepancyType: '',
+    discrepancyType: 'other',
     explanation: '',
   })
 
   // Required dropdowns (NOT optional)
-  const [balanceDueReason, setBalanceDueReason] = useState<BalanceDueReason>('unknown')
-  const [responsePosition, setResponsePosition] = useState<ResponsePosition>('disagree')
+  const [balanceDueReason, setBalanceDueReason] =
+    useState<BalanceDueReason>('unknown')
+  const [responsePosition, setResponsePosition] =
+    useState<ResponsePosition>('dispute')
 
   const [includeReferences, setIncludeReferences] = useState(false)
   const [generatedOutput, setGeneratedOutput] = useState('')
@@ -120,9 +175,22 @@ export default function CP503Page() {
   const [copyState, setCopyState] = useState<CopyState>('idle')
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >
+    ) => {
       const { name, value } = e.target
-      setFormData((prev) => ({ ...prev, [name]: value }))
+
+      if (name === 'discrepancyType') {
+        setFormData((prev) => ({
+          ...prev,
+          discrepancyType: value as DiscrepancyType,
+        }))
+      } else {
+        setFormData((prev) => ({ ...prev, [name]: value }))
+      }
+
       if (hasGenerated) {
         setHasGenerated(false)
         setGeneratedOutput('')
@@ -140,11 +208,11 @@ export default function CP503Page() {
       taxYear: '',
       amountDue: '',
       noticeNumber: 'CP503',
-      discrepancyType: '',
+      discrepancyType: 'other',
       explanation: '',
     })
     setBalanceDueReason('unknown')
-    setResponsePosition('disagree')
+    setResponsePosition('dispute')
     setIncludeReferences(false)
     setGeneratedOutput('')
     setHasGenerated(false)
@@ -168,51 +236,70 @@ export default function CP503Page() {
       return
     }
 
-    const parsedAddr = parseAddressLines(formData.taxpayerAddress)
-
     const discrepancyLine = formData.discrepancyType
-      ? `Discrepancy Type: ${discrepancyLabels[formData.discrepancyType] || formData.discrepancyType}`
+      ? `Discrepancy Type: ${discrepancyLabels[formData.discrepancyType]}`
       : ''
 
-    const explanationCombined = [discrepancyLine, formData.explanation].filter(Boolean).join('\n\n')
+    const explanationCombined = [discrepancyLine, formData.explanation]
+      .filter(Boolean)
+      .join('\n\n')
 
-    // NOTE: if NoticeType enum is missing CP503 in your repo, this fallback avoids a hard crash.
-    const NOTICE_CP503 = (NoticeType as any).CP503 ?? 'CP503'
-
-    const data = {
-      taxpayer: {
-        name: formData.taxpayerName,
-        address: parsedAddr.address,
-        city: parsedAddr.city,
-        state: parsedAddr.state,
-        zip: parsedAddr.zip,
-        ssn: formData.ssn ? onlyDigits(formData.ssn) : '',
-      },
-      taxYear: parseInt(formData.taxYear, 10),
-      noticeDate: formData.noticeDate,
-      noticeNumber: formData.noticeNumber,
-      amountDue: safeCurrencyInput(formData.amountDue),
-      explanation: explanationCombined,
-      // keep these in data if your generator expects them there
-      balanceDueReason,
-      responsePosition,
-    }
-
-    const options = {
-      balanceDueReason,
-      responsePosition,
-      appendReferences: includeReferences,
-    }
+    // Give the engine “meat” (same technique as CP504 fix)
+    const positionNarrative = [
+      `Response Position: ${responsePositionLabels[responsePosition]}`,
+      `Balance Due Reason: ${balanceDueReasonLabels[balanceDueReason]}`,
+      discrepancyLine,
+    ]
+      .filter(Boolean)
+      .join('\n')
 
     try {
-      const result = generateLetter({ type: NOTICE_CP503, data, options } as any)
-      const letterBody = typeof result === 'string' ? result : (result as any)?.letterBody || ''
-      setGeneratedOutput(letterBody)
+      const ctx: LetterContext = {
+        noticeType: 'CP503',
+        family: 'collection_balance_due',
+        taxpayerName: formData.taxpayerName,
+        taxpayerAddress: formData.taxpayerAddress,
+        idValue: formData.ssn ? onlyDigits(formData.ssn) : '',
+        noticeDate: formData.noticeDate,
+        taxYear: formData.taxYear,
+        amount: safeCurrencyInput(formData.amountDue),
+        deadline: '',
+        position: positionNarrative,
+        explanation: explanationCombined,
+        priorActions: '',
+        // Optional signals for future template logic:
+        balanceDueReason,
+        discrepancyType: formData.discrepancyType,
+        appendReferences: includeReferences ? 'true' : 'false',
+      }
+
+      const blueprint = getBlueprint(ctx.noticeType)
+      const letterData = blueprint.build(ctx)
+
+      // Append references when checkbox is checked.
+      const sections = includeReferences
+        ? [
+            ...letterData.sections,
+            {
+              heading: 'References',
+              body: generateEducationalReferences().trim(),
+            },
+          ]
+        : letterData.sections
+
+      const result = composeLetter({
+        ...letterData,
+        sections,
+        todayISO: new Date().toISOString().split('T')[0],
+      })
+
+      setGeneratedOutput(result)
       setHasGenerated(true)
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Generation failed.'
       setGeneratedOutput('')
       setHasGenerated(false)
-      setValidationError(e?.message || 'Generation failed.')
+      setValidationError(msg)
     }
   }, [
     formData,
@@ -220,6 +307,8 @@ export default function CP503Page() {
     balanceDueReason,
     responsePosition,
     discrepancyLabels,
+    balanceDueReasonLabels,
+    responsePositionLabels,
   ])
 
   const handleCopy = useCallback(async () => {
@@ -257,7 +346,10 @@ export default function CP503Page() {
 
   return (
     <SplitView>
-      <FormPanel title="TAC Emergency IRS Responder" subtitle="Deterministic IRS Notice Response Engine">
+      <FormPanel
+        title="TAC Emergency IRS Responder"
+        subtitle="Deterministic IRS Notice Response Engine"
+      >
         <div
           style={{
             display: 'inline-flex',
@@ -272,7 +364,7 @@ export default function CP503Page() {
             letterSpacing: '0.025em',
           }}
         >
-          CP503 — Second Reminder Notice
+          CP503 — Third Reminder Notice
         </div>
 
         <FormSection
@@ -376,7 +468,10 @@ export default function CP503Page() {
           </FormRow>
         </FormSection>
 
-        <FormSection title="Notice Details" description="Enter the specific information from your CP503 notice.">
+        <FormSection
+          title="Notice Details"
+          description="Enter the specific information from your CP503 notice."
+        >
           <FormRow columns={2}>
             <FormField label="Notice Date" htmlFor="noticeDate" required>
               <Input
@@ -400,40 +495,39 @@ export default function CP503Page() {
           </FormRow>
 
           <FormRow columns={2}>
-           <FormField label="Amount Due" htmlFor="amountDue" required>
-  <input
-    id="amountDue"
-    name="amountDue"
-    type="text"
-    value={formData.amountDue}
-    onChange={handleChange}
-    placeholder="$1,234.56"
-    inputMode="decimal"
-    style={{
-      width: '100%',
-      padding: '10px 12px',
-      borderRadius: 'var(--radius-md)',
-      border: '1px solid var(--gray-200)',
-      background: '#fff',
-      fontSize: 'var(--text-sm)',
-      outline: 'none',
-    }}
-  />
-</FormField>
-            <FormField label="Discrepancy Type" htmlFor="discrepancyType" hint="If identified">
+            <FormField label="Amount Due" htmlFor="amountDue" required>
+              <input
+                id="amountDue"
+                name="amountDue"
+                type="text"
+                value={formData.amountDue}
+                onChange={handleChange}
+                placeholder="$1,234.56"
+                inputMode="decimal"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--gray-200)',
+                  background: '#fff',
+                  fontSize: 'var(--text-sm)',
+                  outline: 'none',
+                }}
+              />
+            </FormField>
+
+            <FormField label="Discrepancy Type" htmlFor="discrepancyType" hint="If identified" required>
               <Select
                 id="discrepancyType"
                 name="discrepancyType"
                 value={formData.discrepancyType}
                 onChange={handleChange}
               >
-                <option value="">Select type</option>
-                <option value="unreported-income">Unreported Income</option>
-                <option value="1099-mismatch">1099 Mismatch</option>
-                <option value="w2-mismatch">W-2 Mismatch</option>
-                <option value="deduction-disallowed">Deduction Disallowed</option>
-                <option value="credit-adjustment">Credit Adjustment</option>
-                <option value="other">Other</option>
+                {discrepancyTypeOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
               </Select>
             </FormField>
           </FormRow>
@@ -443,7 +537,7 @@ export default function CP503Page() {
           title="Explanation"
           description="Provide supporting information to include in the response letter."
         >
-          <FormField label="Explanation and Supporting Information" htmlFor="explanation" required>
+          <FormField label="Explanation and Supporting Information" htmlFor="explanation">
             <Textarea
               id="explanation"
               name="explanation"
@@ -471,7 +565,13 @@ export default function CP503Page() {
               type="checkbox"
               id="includeReferences"
               checked={includeReferences}
-              onChange={(e) => setIncludeReferences(e.target.checked)}
+              onChange={(e) => {
+                setIncludeReferences(e.target.checked)
+                if (hasGenerated) {
+                  setHasGenerated(false)
+                  setGeneratedOutput('')
+                }
+              }}
               style={{
                 width: '18px',
                 height: '18px',

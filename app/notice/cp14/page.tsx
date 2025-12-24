@@ -1,4 +1,4 @@
-// app/notice/cp14/page.tsx
+// app/notice/cp503/page.tsx
 'use client'
 
 import React, { useState, useCallback, useMemo } from 'react'
@@ -15,10 +15,13 @@ import {
 } from '@/components/forms'
 import { Button } from '@/components/ui/Button'
 
+// SWITCH: stop using legacy generator router, use the new letter engine
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
+import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
 
 type CopyState = 'idle' | 'copied'
 
+// Align to your engine patterns used in CP14/CP504 pages
 type ResponsePosition = 'dispute' | 'already_paid' | 'request_time_to_pay'
 
 type BalanceDueReason =
@@ -70,16 +73,7 @@ function parseAddressLines(multiline: string) {
   }
 }
 
-function extractLetterBody(result: unknown): string {
-  if (typeof result === 'string') return result
-  if (result && typeof result === 'object' && 'letterBody' in result) {
-    const lb = (result as { letterBody?: unknown }).letterBody
-    return typeof lb === 'string' ? lb : ''
-  }
-  return ''
-}
-
-export default function CP14Page() {
+export default function CP503Page() {
   const balanceDueReasonOptions = useMemo(
     () => [
       { value: 'unpaid_tax', label: 'Unpaid tax shown on return' },
@@ -125,6 +119,27 @@ export default function CP14Page() {
     []
   )
 
+  const balanceDueReasonLabels: Record<BalanceDueReason, string> = useMemo(
+    () => ({
+      unpaid_tax: 'Unpaid tax shown on return',
+      irs_adjustment: 'IRS adjustment / assessment',
+      penalty_interest: 'Penalties and interest',
+      payment_misapplied: 'Payment misapplied / not credited',
+      unknown: 'Unknown / unclear',
+      other: 'Other',
+    }),
+    []
+  )
+
+  const responsePositionLabels: Record<ResponsePosition, string> = useMemo(
+    () => ({
+      dispute: 'I dispute the balance due',
+      already_paid: 'I already paid this balance',
+      request_time_to_pay: 'I need time to pay',
+    }),
+    []
+  )
+
   const [formData, setFormData] = useState<{
     taxpayerName: string
     taxpayerAddress: string
@@ -142,7 +157,7 @@ export default function CP14Page() {
     noticeDate: '',
     taxYear: '',
     amountDue: '',
-    noticeNumber: 'CP14',
+    noticeNumber: 'CP503',
     discrepancyType: 'other',
     explanation: '',
   })
@@ -167,7 +182,6 @@ export default function CP14Page() {
     ) => {
       const { name, value } = e.target
 
-      // typed coercion for discrepancyType
       if (name === 'discrepancyType') {
         setFormData((prev) => ({
           ...prev,
@@ -193,7 +207,7 @@ export default function CP14Page() {
       noticeDate: '',
       taxYear: '',
       amountDue: '',
-      noticeNumber: 'CP14',
+      noticeNumber: 'CP503',
       discrepancyType: 'other',
       explanation: '',
     })
@@ -226,14 +240,22 @@ export default function CP14Page() {
       ? `Discrepancy Type: ${discrepancyLabels[formData.discrepancyType]}`
       : ''
 
-    // Explanation is OPTIONAL. If user leaves it blank, we still send an empty string.
     const explanationCombined = [discrepancyLine, formData.explanation]
       .filter(Boolean)
       .join('\n\n')
 
+    // Give the engine “meat” (same technique as CP504 fix)
+    const positionNarrative = [
+      `Response Position: ${responsePositionLabels[responsePosition]}`,
+      `Balance Due Reason: ${balanceDueReasonLabels[balanceDueReason]}`,
+      discrepancyLine,
+    ]
+      .filter(Boolean)
+      .join('\n')
+
     try {
       const ctx: LetterContext = {
-        noticeType: 'CP14',
+        noticeType: 'CP503',
         family: 'collection_balance_due',
         taxpayerName: formData.taxpayerName,
         taxpayerAddress: formData.taxpayerAddress,
@@ -241,22 +263,37 @@ export default function CP14Page() {
         noticeDate: formData.noticeDate,
         taxYear: formData.taxYear,
         amount: safeCurrencyInput(formData.amountDue),
-        // CP14 UI currently does not capture a due-date/deadline field; keep deterministic placeholder.
         deadline: '',
-        position: responsePosition,
+        position: positionNarrative,
         explanation: explanationCombined,
+        priorActions: '',
+        // Optional signals for future template logic:
+        balanceDueReason,
+        discrepancyType: formData.discrepancyType,
+        appendReferences: includeReferences ? 'true' : 'false',
       }
 
       const blueprint = getBlueprint(ctx.noticeType)
       const letterData = blueprint.build(ctx)
 
+      // Append references when checkbox is checked.
+      const sections = includeReferences
+        ? [
+            ...letterData.sections,
+            {
+              heading: 'References',
+              body: generateEducationalReferences().trim(),
+            },
+          ]
+        : letterData.sections
+
       const result = composeLetter({
         ...letterData,
+        sections,
         todayISO: new Date().toISOString().split('T')[0],
       })
 
-      const letterBody = extractLetterBody(result)
-      setGeneratedOutput(letterBody)
+      setGeneratedOutput(result)
       setHasGenerated(true)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Generation failed.'
@@ -264,7 +301,15 @@ export default function CP14Page() {
       setHasGenerated(false)
       setValidationError(msg)
     }
-  }, [formData, responsePosition, discrepancyLabels])
+  }, [
+    formData,
+    includeReferences,
+    balanceDueReason,
+    responsePosition,
+    discrepancyLabels,
+    balanceDueReasonLabels,
+    responsePositionLabels,
+  ])
 
   const handleCopy = useCallback(async () => {
     if (!generatedOutput) return
@@ -283,7 +328,7 @@ export default function CP14Page() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `cp14-response-${formData.taxYear || 'taxyear'}-${Date.now()}.txt`
+    link.download = `cp503-response-${formData.taxYear || 'taxyear'}-${Date.now()}.txt`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -319,12 +364,12 @@ export default function CP14Page() {
             letterSpacing: '0.025em',
           }}
         >
-          CP14 — Balance Due Notice
+          CP503 — Third Reminder Notice
         </div>
 
         <FormSection
           title="Response Context"
-          description="Select the reason and your position for this CP14 response."
+          description="Select the reason and your position for this CP503 response."
         >
           <FormRow columns={2}>
             <FormField label="Balance Due Reason" htmlFor="balanceDueReason" required>
@@ -423,7 +468,10 @@ export default function CP14Page() {
           </FormRow>
         </FormSection>
 
-        <FormSection title="Notice Details" description="Enter the specific information from your CP14 notice.">
+        <FormSection
+          title="Notice Details"
+          description="Enter the specific information from your CP503 notice."
+        >
           <FormRow columns={2}>
             <FormField label="Notice Date" htmlFor="noticeDate" required>
               <Input
@@ -441,7 +489,7 @@ export default function CP14Page() {
                 name="noticeNumber"
                 value={formData.noticeNumber}
                 onChange={handleChange}
-                placeholder="CP14"
+                placeholder="CP503"
               />
             </FormField>
           </FormRow>
@@ -485,7 +533,10 @@ export default function CP14Page() {
           </FormRow>
         </FormSection>
 
-        <FormSection title="Explanation" description="Provide supporting information to include in the response letter.">
+        <FormSection
+          title="Explanation"
+          description="Provide supporting information to include in the response letter."
+        >
           <FormField label="Explanation and Supporting Information" htmlFor="explanation">
             <Textarea
               id="explanation"
@@ -514,7 +565,13 @@ export default function CP14Page() {
               type="checkbox"
               id="includeReferences"
               checked={includeReferences}
-              onChange={(e) => setIncludeReferences(e.target.checked)}
+              onChange={(e) => {
+                setIncludeReferences(e.target.checked)
+                if (hasGenerated) {
+                  setHasGenerated(false)
+                  setGeneratedOutput('')
+                }
+              }}
               style={{
                 width: '18px',
                 height: '18px',

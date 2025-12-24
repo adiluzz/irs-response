@@ -1,25 +1,41 @@
-// lib/letters/educationalReferences.ts
+/**
+ * Educational / legal authority references
+ * Used when ctx.includeReferences === 'true'
+ */
 
-export function generateEducationalReferences(): string {
+export function educationalReferences(): string[] {
   return [
-    '',
     '---',
     '',
-    'Primary authority (U.S. Code / Internal Revenue Code):',
-    '• 26 U.S.C. § 6303 — Notice and demand for tax',
-    '• 26 U.S.C. § 6159 — Agreements for payment of tax liability in installments',
-    '• 26 U.S.C. §§ 6320 and 6330 — Collection Due Process (CDP) rights (liens and levies)',
-    '• 26 U.S.C. § 6651 — Failure-to-file and failure-to-pay additions to tax',
-    '• 26 U.S.C. § 6404 — Abatement of assessments and penalties in limited circumstances',
+    'LEGAL AND ADMINISTRATIVE AUTHORITY',
     '',
-    'IRS publications:',
-    '• IRS Publication 1 — Your Rights as a Taxpayer',
-    '• IRS Publication 594 — The IRS Collection Process',
-    '• IRS Publication 556 — Examination of Returns, Appeal Rights, and Claims for Refund',
-    "• IRS Publication 5 — Your Appeal Rights and How to Prepare a Protest If You Don't Agree",
-  ].join('\n')
+    'Internal Revenue Code (Title 26, United States Code):',
+    '• 26 U.S.C. § 6303 — Requires the Service to issue proper notice and demand for payment before collection activity.',
+    '• 26 U.S.C. § 6159 — Authorizes installment agreements when immediate full payment would create hardship.',
+    '• 26 U.S.C. §§ 6320 and 6330 — Establish Collection Due Process (CDP) rights prior to lien or levy action.',
+    '• 26 U.S.C. § 6651 — Governs additions to tax for failure to file or pay, subject to reasonable cause exceptions.',
+    '• 26 U.S.C. § 6404 — Authorizes abatement of assessments, penalties, and interest under appropriate circumstances.',
+    '',
+    'Treasury Regulations and Administrative Guidance:',
+    '• Treas. Reg. § 301.6159-1 — Procedures governing installment agreements.',
+    '• Treas. Reg. § 301.6330-1 — Due process protections in collection actions.',
+    '',
+    'IRS Publications (Administrative Authority):',
+    '• IRS Publication 1 — Taxpayer rights, including the right to be informed, heard, and to challenge the IRS’s position.',
+    '• IRS Publication 594 — The IRS Collection Process, including alternatives to enforced collection.',
+    '• IRS Publication 556 — Examination procedures, appeal rights, and claims for refund.',
+    '• IRS Publication 5 — Appeal rights and procedures when disputing IRS determinations.',
+    '',
+    'This response is submitted with reliance on the foregoing authority and is intended to preserve all procedural and substantive rights afforded to the taxpayer.'
+  ]
 }
 
-// Backward-compatible alias
+/**
+ * Backward-compatible aliases
+ * (do NOT remove — used by legacy imports)
+ */
+export const generateEducationalReferences = () =>
+  educationalReferences().join('\n')
+
 export const generateEducationalAppendix = generateEducationalReferences
 
