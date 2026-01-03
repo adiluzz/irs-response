@@ -1,4 +1,8 @@
+'use client';
+
 import React from 'react';
+import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 
@@ -7,6 +11,19 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const { data: session, status } = useSession();
+  const pathname = usePathname();
+  
+  // Don't show sidebar or topbar on auth pages
+  const isAuthPage = pathname?.startsWith('/auth');
+  const showSidebar = !isAuthPage && status === 'authenticated';
+  const showTopBar = !isAuthPage;
+
+  // For auth pages, render children directly without shell
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
+
   return (
     <div
       style={{
@@ -14,14 +31,14 @@ export function AppShell({ children }: AppShellProps) {
         backgroundColor: 'var(--gray-50)',
       }}
     >
-      <TopBar />
-      <Sidebar />
+      {showTopBar && <TopBar />}
+      {showSidebar && <Sidebar />}
       
       {/* Main content area */}
       <main
         style={{
-          marginLeft: 'var(--sidebar-width)',
-          paddingTop: 'var(--topbar-height)',
+          marginLeft: showSidebar ? 'var(--sidebar-width)' : '0',
+          paddingTop: showTopBar ? 'var(--topbar-height)' : '0',
           minHeight: '100vh',
         }}
       >

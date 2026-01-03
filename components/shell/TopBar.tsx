@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/Badge';
+import { UserMenu } from '@/components/auth/UserMenu';
 
 export function TopBar() {
   return (
@@ -63,27 +64,10 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Right: Version + Future user menu */}
+      {/* Right: Version + User menu */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <Badge variant="muted">Preview v0.9</Badge>
-        
-        {/* Placeholder for user menu */}
-        <div
-          style={{
-            width: '32px',
-            height: '32px',
-            backgroundColor: 'var(--gray-200)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--gray-500)',
-            fontSize: '12px',
-            fontWeight: 600,
-          }}
-        >
-          U
-        </div>
+        <UserMenu />
       </div>
     </header>
   );

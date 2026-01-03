@@ -17,77 +17,175 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth = false,
       children,
       disabled,
+      style,
       ...props
     },
     ref
   ) => {
-    const baseStyles =
-      'inline-flex items-center justify-center font-medium rounded-lg ' +
-      'transition-all duration-150 ' +
-      'focus:outline-none focus:ring-2 focus:ring-offset-2 ' +
-      'active:scale-[0.97] ' +
-      'disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none'
-
-    const motionStyles =
-      'hover:-translate-y-[1px] hover:shadow-lg active:translate-y-0'
-
-    const variants: Record<string, string> = {
-      primary:
-        'bg-tac-navy text-white ' +
-        'border border-[rgba(184,155,94,0.55)] ' +
-        'hover:bg-tac-navy-light ' +
-        'hover:border-[rgba(184,155,94,0.8)] ' +
-        'hover:shadow-xl ' +
-        'focus:ring-[rgba(184,155,94,0.6)] ' +
-        'focus:ring-offset-white',
-
-      secondary:
-        'bg-slate-200 text-tac-text-primary border border-slate-300 ' +
-        'hover:bg-slate-300 hover:border-slate-400 ' +
-        'focus:ring-slate-400 focus:ring-offset-white',
-
-      outline:
-        'bg-white text-tac-navy border border-tac-navy ' +
-        'hover:bg-tac-navy hover:text-white ' +
-        'focus:ring-tac-navy focus:ring-offset-white',
-
-      ghost:
-        'bg-transparent text-tac-text-secondary ' +
-        'hover:bg-slate-100 ' +
-        'focus:ring-slate-400 focus:ring-offset-white',
-
-      danger:
-        'bg-red-600 text-white border border-red-600 ' +
-        'hover:bg-red-700 hover:border-red-700 ' +
-        'focus:ring-red-600 focus:ring-offset-white',
+    // Base styles using CSS variables
+    const baseStyles: React.CSSProperties = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'var(--font-sans)',
+      fontWeight: 500,
+      borderRadius: 'var(--radius-md)',
+      transition: 'all var(--transition-base)',
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      outline: 'none',
+      border: '1px solid',
+      ...style,
     }
 
-    const sizes: Record<string, string> = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2 text-sm',
-      lg: 'px-6 py-3 text-base',
+    // Size styles
+    const sizeStyles: Record<string, React.CSSProperties> = {
+      sm: {
+        padding: '6px 12px',
+        fontSize: 'var(--text-sm)',
+      },
+      md: {
+        padding: '10px 16px',
+        fontSize: 'var(--text-sm)',
+      },
+      lg: {
+        padding: '12px 24px',
+        fontSize: 'var(--text-base)',
+      },
     }
 
-    const widthClass = fullWidth ? 'w-full' : ''
+    // Variant styles
+    const variantStyles: Record<string, React.CSSProperties> = {
+      primary: {
+        backgroundColor: 'var(--gray-900)',
+        color: '#ffffff',
+        borderColor: 'rgba(184, 155, 94, 0.55)', // brand gold
+        boxShadow: 'var(--shadow-xs)',
+      },
+      secondary: {
+        backgroundColor: 'var(--gray-200)',
+        color: 'var(--gray-900)',
+        borderColor: 'var(--gray-300)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+      outline: {
+        backgroundColor: '#ffffff',
+        color: 'var(--gray-900)',
+        borderColor: 'var(--gray-900)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+      ghost: {
+        backgroundColor: 'transparent',
+        color: 'var(--gray-600)',
+        borderColor: 'transparent',
+        boxShadow: 'none',
+      },
+      danger: {
+        backgroundColor: 'var(--red-600)',
+        color: '#ffffff',
+        borderColor: 'var(--red-600)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+    }
 
-    const combinedClassName =
-      baseStyles +
-      ' ' +
-      motionStyles +
-      ' ' +
-      variants[variant] +
-      ' ' +
-      sizes[size] +
-      ' ' +
-      widthClass +
-      ' ' +
-      className
+    // Hover styles (applied via onMouseEnter/onMouseLeave)
+    const hoverStyles: Record<string, React.CSSProperties> = {
+      primary: {
+        backgroundColor: 'var(--gray-800)',
+        borderColor: 'rgba(184, 155, 94, 0.8)',
+        boxShadow: 'var(--shadow-md)',
+        transform: 'translateY(-1px)',
+      },
+      secondary: {
+        backgroundColor: 'var(--gray-300)',
+        borderColor: 'var(--gray-400)',
+        boxShadow: 'var(--shadow-md)',
+        transform: 'translateY(-1px)',
+      },
+      outline: {
+        backgroundColor: 'var(--gray-900)',
+        color: '#ffffff',
+        boxShadow: 'var(--shadow-md)',
+        transform: 'translateY(-1px)',
+      },
+      ghost: {
+        backgroundColor: 'var(--gray-100)',
+        boxShadow: 'none',
+        transform: 'translateY(-1px)',
+      },
+      danger: {
+        backgroundColor: '#b91c1c',
+        borderColor: '#b91c1c',
+        boxShadow: 'var(--shadow-md)',
+        transform: 'translateY(-1px)',
+      },
+    }
+
+    // Active styles
+    const activeStyles: Record<string, React.CSSProperties> = {
+      primary: {
+        transform: 'translateY(0) scale(0.98)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+      secondary: {
+        transform: 'translateY(0) scale(0.98)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+      outline: {
+        transform: 'translateY(0) scale(0.98)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+      ghost: {
+        transform: 'translateY(0) scale(0.98)',
+      },
+      danger: {
+        transform: 'translateY(0) scale(0.98)',
+        boxShadow: 'var(--shadow-xs)',
+      },
+    }
+
+    const [isHovered, setIsHovered] = React.useState(false)
+    const [isActive, setIsActive] = React.useState(false)
+
+    const combinedStyle: React.CSSProperties = {
+      ...baseStyles,
+      ...sizeStyles[size],
+      ...variantStyles[variant],
+      ...(isHovered && !disabled ? hoverStyles[variant] : {}),
+      ...(isActive && !disabled ? activeStyles[variant] : {}),
+      ...(disabled
+        ? {
+            opacity: 0.4,
+            cursor: 'not-allowed',
+            pointerEvents: 'none' as const,
+          }
+        : {}),
+      ...(fullWidth ? { width: '100%' } : {}),
+    }
 
     return (
       <button
         ref={ref}
-        className={combinedClassName}
+        className={className}
+        style={combinedStyle}
         disabled={disabled}
+        onMouseEnter={() => !disabled && setIsHovered(true)}
+        onMouseLeave={() => {
+          setIsHovered(false)
+          setIsActive(false)
+        }}
+        onMouseDown={() => !disabled && setIsActive(true)}
+        onMouseUp={() => setIsActive(false)}
+        onFocus={(e) => {
+          props.onFocus?.(e)
+          if (!disabled) {
+            e.currentTarget.style.outline = '2px solid var(--blue-500)'
+            e.currentTarget.style.outlineOffset = '2px'
+          }
+        }}
+        onBlur={(e) => {
+          props.onBlur?.(e)
+          e.currentTarget.style.outline = 'none'
+        }}
         {...props}
       >
         {children}
@@ -99,4 +197,3 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = 'Button'
 
 export { Button }
-

@@ -1,6 +1,7 @@
 ﻿'use client';
 import React from 'react';
 import Link from 'next/link';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
 const availableNotices = [
   {
@@ -52,12 +53,13 @@ const availableNotices = [
 
 export default function NoticeIndexPage() {
   return (
-    <div
-      style={{
-        padding: 'var(--space-8)',
-        maxWidth: '960px',
-      }}
-    >
+    <AuthGuard>
+      <div
+        style={{
+          padding: 'var(--space-8)',
+          maxWidth: '960px',
+        }}
+      >
       {/* Page Header */}
       <header style={{ marginBottom: 'var(--space-8)' }}>
         <h1
@@ -215,5 +217,6 @@ export default function NoticeIndexPage() {
         </p>
       </div>
     </div>
+    </AuthGuard>
   );
 }

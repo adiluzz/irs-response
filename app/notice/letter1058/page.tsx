@@ -14,6 +14,7 @@ import {
   Textarea,
 } from '@/components/forms'
 import { Button } from '@/components/ui/Button'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 
 // SWITCH: stop using legacy generator router, use the new letter engine
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
@@ -345,6 +346,7 @@ export default function Letter1058Page() {
   )
 
   return (
+    <AuthGuard>
     <SplitView>
       <FormPanel
         title="TAC Emergency IRS Responder"
@@ -724,6 +726,7 @@ export default function Letter1058Page() {
         </div>
       </aside>
     </SplitView>
+    </AuthGuard>
   )
 }
 

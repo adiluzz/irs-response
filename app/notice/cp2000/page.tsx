@@ -14,6 +14,7 @@ import {
   Textarea,
 } from '@/components/forms';
 import { Button } from '@/components/ui/Button';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
 import { LetterPreview } from '@/components/preview/LetterPreview';
 
@@ -222,8 +223,9 @@ export default function CP2000Page() {
   );
 
   return (
-    <SplitView>
-      <FormPanel title="TAC Emergency IRS Responder" subtitle="Deterministic IRS Notice Response Engine">
+    <AuthGuard>
+      <SplitView>
+        <FormPanel title="TAC Emergency IRS Responder" subtitle="Deterministic IRS Notice Response Engine">
         <div
           style={{
             display: 'inline-flex',
@@ -524,7 +526,7 @@ export default function CP2000Page() {
               }}
             >
               {/* ✅ same finished typography as other notices */}
-              <LetterPreview payload={{ rendered: generatedOutput }} />
+              <LetterPreview noticeType="CP2000" />
             </div>
           ) : (
             <div
@@ -547,5 +549,6 @@ export default function CP2000Page() {
         </div>
       </aside>
     </SplitView>
+    </AuthGuard>
   );
 }

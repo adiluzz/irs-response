@@ -342,3 +342,77 @@ aside button.active {
   position: relative;
   z-index: 1;
 }
+/* =========================
+   PDF / Print Export
+   ========================= */
+
+.no-print {
+  /* On screen: visible. Print: hidden */
+}
+
+@media print {
+  /* Use full page and kill app chrome */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  /* Hide anything marked no-print */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Hide Next.js / layout chrome common offenders */
+  header, nav, footer {
+    display: none !important;
+  }
+
+  /* Make sure preview prints as a clean page */
+  .print-letter-root {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* This is the actual printable letter area */
+  .print-letter {
+    position: relative;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border: none !important;
+
+    /* Helps prevent clipped content */
+    overflow: visible !important;
+
+    /* Give the PDF a nice margin */
+    padding: 0.75in !important;
+  }
+
+  /* Watermark overlay (PRINT ONLY) */
+  .print-letter::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.08; /* small, subtle */
+
+    /* Use your existing asset */
+    background-image: url('/watermarks/fast-form-filing-watermark.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 60% auto;
+  }
+
+  /* Optional: ensure colors/opacity print reliably */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Optional: page settings */
+  @page {
+    margin: 0;
+  }
+}
+

@@ -13,6 +13,7 @@ import {
   Textarea,
 } from '@/components/forms';
 import { Button } from '@/components/ui/Button';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
 
 export default function CP501Page() {
@@ -156,6 +157,7 @@ export default function CP501Page() {
   );
 
   return (
+    <AuthGuard>
     <SplitView>
       <FormPanel
         title="TAC Emergency IRS Responder"
@@ -461,5 +463,6 @@ export default function CP501Page() {
         </div>
       </aside>
     </SplitView>
+    </AuthGuard>
   );
 }

@@ -32,7 +32,7 @@ export function SplitView({ children }: SplitViewProps) {
       <div
         className="panel-surface gold-frame"
         style={{
-          width: 'var(--preview-width)',
+          width: 'calc(var(--preview-width) * 1.2)', // ⬅️ +20% preview width
           flexShrink: 0,
         }}
       >

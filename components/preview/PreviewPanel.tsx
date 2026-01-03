@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 
 export default function PreviewPanel({
   value,
@@ -9,12 +10,8 @@ export default function PreviewPanel({
   value: string
   isPaid?: boolean
 }) {
-  const isEmpty = !value
+  const hasGenerated = Boolean(value)
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
-
-  const watermarkOpacity = isPaid
-    ? 'var(--wm-pane-opacity-paid)'
-    : 'var(--wm-pane-opacity-free)'
 
   const handleCopy = useCallback(async () => {
     if (!value) return
@@ -22,9 +19,7 @@ export default function PreviewPanel({
       await navigator.clipboard.writeText(value)
       setCopyState('copied')
       setTimeout(() => setCopyState('idle'), 2000)
-    } catch {
-      // noop
-    }
+    } catch {}
   }, [value])
 
   const handleDownload = useCallback(() => {
@@ -33,236 +28,201 @@ export default function PreviewPanel({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `tac-response-${new Date().toISOString().slice(0, 10)}.txt`
+    a.download = `tac-letter-${Date.now()}.txt`
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }, [value])
+
+  const handlePDF = useCallback(() => {
+    if (!value) return
+
+    const safeText = value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+
+    const wmOpacity = isPaid ? 0.06 : 0.1
+
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>TAC Response PDF</title>
+<style>
+@page { margin: 0.75in; }
+body {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  margin: 0;
+  color: #111827;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.page {
+  position: relative;
+  min-height: 100vh;
+}
+.wm {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: ${wmOpacity};
+  filter: grayscale(1) contrast(1.05);
+}
+.wm::before {
+  content: "";
+  width: 520px;
+  height: 520px;
+  background: url('/brand/f3-crest.png') center/contain no-repeat;
+  transform: translateY(-40px);
+}
+pre {
+  position: relative;
+  z-index: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  line-height: 1.7;
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="wm"></div>
+  <pre>${safeText}</pre>
+</div>
+<script>
+  window.onload = () => {
+    window.focus()
+    window.print()
+  }
+</script>
+</body>
+</html>`
+
+    const w = window.open('', '_blank', 'noopener,noreferrer')
+    if (!w) return
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+  }, [value, isPaid])
 
   return (
     <aside
       style={{
         width: 'var(--preview-width)',
-        flexShrink: 0,
-        backgroundColor: 'var(--gray-100)',
+        background: 'var(--gray-100)',
         borderLeft: '1px solid var(--gray-200)',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         overflow: 'hidden',
-        position: 'relative',
       }}
     >
-      {/* FREE: pane-wide watermark (PAID removes it via opacity token) */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-          userSelect: 'none',
-          zIndex: 0,
-        }}
-      >
-        <div
-          style={{
-            width: 'var(--wm-pane-size-free)',
-            height: 'var(--wm-pane-size-free)',
-            transform: `translateY(calc(var(--wm-pane-y) - 50%))`,
-            backgroundImage: `url('/brand/f3-crest.png')`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            backgroundSize: 'contain',
-            opacity: watermarkOpacity,
-            filter: 'grayscale(1) contrast(1.05)',
-          }}
-        />
-      </div>
-
-      {/* Header */}
       <header
         style={{
           padding: '16px 20px',
           borderBottom: '1px solid var(--gray-200)',
-          backgroundColor: '#ffffff',
+          background: '#fff',
           display: 'flex',
-          alignItems: 'center',
           justifyContent: 'space-between',
-          flexShrink: 0,
-          position: 'relative',
-          zIndex: 1,
+          alignItems: 'center',
         }}
       >
         <div>
-          {/* Brand lockup */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <img
-              src="/brand/f3-crest.png"
-              alt="F3"
-              style={{ width: 22, height: 22, objectFit: 'contain', opacity: 0.95 }}
-            />
-            <div style={{ lineHeight: 1.1 }}>
-              <div
-                style={{
-                  fontSize: 'var(--text-sm)',
-                  fontWeight: 700,
-                  letterSpacing: '-0.01em',
-                  color: 'var(--gray-900)',
-                }}
-              >
-                TAC Response Engine
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)' }}>
-                IRS Notice Draft Preview
-              </div>
-            </div>
-          </div>
-
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)' }}>
-            {isEmpty ? 'Generate a draft to preview it here.' : 'Draft generated and ready for review.'}
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Document Preview</div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>
+            {hasGenerated ? 'Draft ready for review' : 'Complete fields and generate'}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            type="button"
-            onClick={handleCopy}
-            disabled={isEmpty}
-            style={{
-              border: '1px solid var(--gray-200)',
-              background: '#fff',
-              color: 'var(--gray-900)',
-              padding: '8px 10px',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)',
-              opacity: isEmpty ? 0.5 : 1,
-              cursor: isEmpty ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {copyState === 'copied' ? 'Copied' : 'Copy'}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownload}
-            disabled={isEmpty}
-            style={{
-              border: '1px solid var(--gray-900)',
-              background: 'var(--gray-900)',
-              color: '#fff',
-              padding: '8px 10px',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 700,
-              opacity: isEmpty ? 0.5 : 1,
-              cursor: isEmpty ? 'not-allowed' : 'pointer',
-            }}
-          >
-            Download
-          </button>
-        </div>
+        {hasGenerated && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button size="sm" variant="ghost" onClick={handleCopy}>
+              {copyState === 'copied' ? 'Copied' : 'Copy'}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handlePDF}>
+              PDF
+            </Button>
+            <Button size="sm" variant="secondary" onClick={handleDownload}>
+              Download
+            </Button>
+          </div>
+        )}
       </header>
 
-      {/* Content */}
       <div
         style={{
           flex: 1,
           overflow: 'auto',
-          padding: '24px 20px',
-          position: 'relative',
-          zIndex: 1,
+          padding: 24,
+          display: 'flex',
+          justifyContent: 'center',
         }}
       >
-        {isEmpty ? (
-          <div
-            style={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              color: 'var(--gray-500)',
-              padding: 24,
-            }}
-          >
+        {hasGenerated ? (
+          <div style={{ width: '100%', maxWidth: 860 }}>
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 'var(--radius-lg)',
-                backgroundColor: 'var(--gray-200)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 14,
-                boxShadow: 'var(--shadow-xs)',
+                background: '#fff',
+                border: '1px solid var(--gray-200)',
+                borderRadius: 8,
+                padding: '40px 36px',
+                minHeight: 600,
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <path d="M14 2v6h6" />
-                <path d="M8 13h8" />
-                <path d="M8 17h8" />
-              </svg>
-            </div>
-            <div style={{ fontWeight: 700, color: 'var(--gray-700)', marginBottom: 6 }}>
-              No preview yet
-            </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)', maxWidth: 280 }}>
-              Fill the form, then click Generate.
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isPaid ? 0.06 : 0.1,
+                  pointerEvents: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    width: 420,
+                    height: 420,
+                    background: `url('/brand/f3-crest.png') center/contain no-repeat`,
+                    transform: 'translateY(-24px)',
+                  }}
+                />
+              </div>
+
+              <pre
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  fontSize: 12,
+                  lineHeight: 1.7,
+                  margin: 0,
+                }}
+              >
+                {value}
+              </pre>
             </div>
           </div>
         ) : (
           <div
             style={{
-              backgroundColor: '#ffffff',
-              border: '1px solid var(--gray-200)',
-              borderRadius: 'var(--radius-md)',
-              boxShadow: 'var(--shadow-paper)',
-              padding: '40px 36px',
-              minHeight: 640,
-              position: 'relative',
-              overflow: 'hidden',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#9ca3af',
             }}
           >
-            {/* PAID: small maker’s mark (optional provenance) */}
-            {isPaid && (
-              <div
-                aria-hidden
-                style={{
-                  position: 'absolute',
-                  right: 'var(--wm-mark-offset)',
-                  bottom: 'var(--wm-mark-offset)',
-                  width: 'var(--wm-mark-size)',
-                  height: 'var(--wm-mark-size)',
-                  backgroundImage: `url('/brand/f3-crest.png')`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center',
-                  backgroundSize: 'contain',
-                  opacity: 'var(--wm-mark-opacity)',
-                  filter: 'grayscale(1) contrast(1.05)',
-                  pointerEvents: 'none',
-                  userSelect: 'none',
-                }}
-              />
-            )}
-
-            <pre
-              style={{
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                margin: 0,
-                fontSize: 12,
-                lineHeight: 1.7,
-                fontFamily: 'var(--font-mono)',
-                color: 'var(--gray-800)',
-              }}
-            >
-              {value}
-            </pre>
+            Awaiting Input
           </div>
         )}
       </div>

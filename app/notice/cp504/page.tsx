@@ -14,6 +14,7 @@ import {
   Textarea,
 } from '@/components/forms'
 import { Button } from '@/components/ui/Button'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
 import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
@@ -343,6 +344,7 @@ export default function CP504Page() {
   )
 
   return (
+    <AuthGuard>
     <SplitView>
       <FormPanel
         title="TAC Emergency IRS Responder"
@@ -777,5 +779,6 @@ export default function CP504Page() {
         </div>
       </aside>
     </SplitView>
+    </AuthGuard>
   )
 }

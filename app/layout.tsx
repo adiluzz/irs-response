@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { AppShell } from '@/components/shell/AppShell'
+import { SessionProvider } from '@/components/providers/SessionProvider'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AppShell>{children}</AppShell>
+        <SessionProvider>
+          <AppShell>{children}</AppShell>
+        </SessionProvider>
       </body>
     </html>
   )

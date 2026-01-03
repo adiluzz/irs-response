@@ -14,6 +14,7 @@ import {
   Textarea,
 } from '@/components/forms'
 import { Button } from '@/components/ui/Button'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 
 // SWITCH: stop using legacy generator router, use the new letter engine
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
@@ -40,6 +41,9 @@ type DiscrepancyType =
   | 'credit-adjustment'
   | 'other'
 
+// Demo scaffold. Flip later when payment exists.
+const IS_PAID = false
+
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '')
 }
@@ -47,30 +51,6 @@ function onlyDigits(value: string) {
 function safeCurrencyInput(value: string) {
   // permissive input; formatting handled downstream
   return value
-}
-
-function parseAddressLines(multiline: string) {
-  const lines = multiline
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean)
-
-  if (lines.length === 0) {
-    return { address: '', city: '', state: '', zip: '' }
-  }
-
-  const last = lines[lines.length - 1]
-  const street = lines.slice(0, -1).join('\n') || lines[0] || ''
-
-  const m = last.match(/^(.+),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i)
-  if (!m) return { address: multiline.trim(), city: '', state: '', zip: '' }
-
-  return {
-    address: street,
-    city: m[1] || '',
-    state: (m[2] || '').toUpperCase(),
-    zip: m[3] || '',
-  }
 }
 
 export default function CP90Page() {
@@ -163,10 +143,8 @@ export default function CP90Page() {
   })
 
   // Required dropdowns (NOT optional)
-  const [balanceDueReason, setBalanceDueReason] =
-    useState<BalanceDueReason>('unknown')
-  const [responsePosition, setResponsePosition] =
-    useState<ResponsePosition>('dispute')
+  const [balanceDueReason, setBalanceDueReason] = useState<BalanceDueReason>('unknown')
+  const [responsePosition, setResponsePosition] = useState<ResponsePosition>('dispute')
 
   const [includeReferences, setIncludeReferences] = useState(false)
   const [generatedOutput, setGeneratedOutput] = useState('')
@@ -176,9 +154,7 @@ export default function CP90Page() {
 
   const handleChange = useCallback(
     (
-      e: React.ChangeEvent<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >
+      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) => {
       const { name, value } = e.target
 
@@ -335,6 +311,93 @@ export default function CP90Page() {
     URL.revokeObjectURL(url)
   }, [generatedOutput, formData.taxYear])
 
+  // Minimal Print-to-PDF (opens print dialog; user saves as PDF)
+  const handlePdf = useCallback(() => {
+    if (!generatedOutput) return
+
+    const safeText = generatedOutput
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+
+    const wmOpacity = IS_PAID ? 0.06 : 0.10
+
+    const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>TAC Response PDF</title>
+  <style>
+    @page { margin: 0.75in; }
+    html, body { height: 100%; }
+    body {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: #111827;
+      margin: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      background: #ffffff;
+    }
+    .page {
+      position: relative;
+      min-height: 100vh;
+      padding: 0.75in;
+      box-sizing: border-box;
+      background: #ffffff;
+    }
+    .wm {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      user-select: none;
+      opacity: ${wmOpacity};
+      filter: grayscale(1) contrast(1.05);
+    }
+    .wm::before {
+      content: "";
+      width: 520px;
+      height: 520px;
+      background-image: url('/brand/f3-crest.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      transform: translateY(-40px);
+    }
+    pre {
+      position: relative;
+      z-index: 1;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="wm" aria-hidden="true"></div>
+    <pre>${safeText}</pre>
+  </div>
+  <script>
+    window.onload = () => {
+      window.focus();
+      window.print();
+    };
+  </script>
+</body>
+</html>`
+
+    const w = window.open('', '_blank', 'noopener,noreferrer')
+    if (!w) return
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+  }, [generatedOutput])
+
   const canGenerate = Boolean(
     formData.taxpayerName.trim() &&
       formData.taxpayerAddress.trim() &&
@@ -345,6 +408,7 @@ export default function CP90Page() {
   )
 
   return (
+    <AuthGuard>
     <SplitView>
       <FormPanel
         title="TAC Emergency IRS Responder"
@@ -607,9 +671,22 @@ export default function CP90Page() {
             Clear Form
           </Button>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: '12px',
+            }}
+          >
             {validationError && (
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--red-600)', textAlign: 'right' }}>
+              <div
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--red-600)',
+                  textAlign: 'right',
+                }}
+              >
                 {validationError}
               </div>
             )}
@@ -670,6 +747,9 @@ export default function CP90Page() {
               <Button variant="ghost" size="sm" onClick={handleCopy}>
                 {copyState === 'copied' ? 'Copied' : 'Copy'}
               </Button>
+              <Button variant="ghost" size="sm" onClick={handlePdf}>
+                PDF
+              </Button>
               <Button variant="secondary" size="sm" onClick={handleDownload}>
                 Download
               </Button>
@@ -677,52 +757,97 @@ export default function CP90Page() {
           )}
         </header>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: '24px 20px' }}>
-          {hasGenerated ? (
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid var(--gray-200)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03)',
-                padding: '40px 36px',
-                minHeight: '600px',
-              }}
-            >
-              <pre
+        <div
+          style={{
+            flex: 1,
+            overflow: 'auto',
+            padding: '24px 20px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: 860, position: 'relative' }}>
+            {hasGenerated ? (
+              <div
                 style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '12px',
-                  lineHeight: '1.7',
-                  color: 'var(--gray-800)',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  margin: 0,
+                  backgroundColor: '#ffffff',
+                  border: '1px solid var(--gray-200)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow:
+                    '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03)',
+                  padding: '40px 36px',
+                  minHeight: '600px',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
-                {generatedOutput}
-              </pre>
-            </div>
-          ) : (
-            <div
-              style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                color: 'var(--gray-400)',
-              }}
-            >
-              <p style={{ fontWeight: 500, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                Awaiting Input
-              </p>
-              <p style={{ fontSize: '12px' }}>Complete required fields and click Generate</p>
-            </div>
-          )}
+                {/* Watermark inside paper */}
+                <div
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                    opacity: IS_PAID ? 0.06 : 0.10,
+                    filter: 'grayscale(1) contrast(1.05)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 420,
+                      height: 420,
+                      backgroundImage: `url('/brand/f3-crest.png')`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'center',
+                      backgroundSize: 'contain',
+                      transform: 'translateY(-24px)',
+                    }}
+                  />
+                </div>
+
+                <pre
+                  style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '12px',
+                    lineHeight: '1.7',
+                    color: 'var(--gray-800)',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    margin: 0,
+                  }}
+                >
+                  {generatedOutput}
+                </pre>
+              </div>
+            ) : (
+              <div
+                style={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  color: 'var(--gray-400)',
+                  minHeight: 520,
+                }}
+              >
+                <p style={{ fontWeight: 500, color: 'var(--gray-500)', marginBottom: '4px' }}>
+                  Awaiting Input
+                </p>
+                <p style={{ fontSize: '12px' }}>Complete required fields and click Generate</p>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </SplitView>
+    </AuthGuard>
   )
 }
