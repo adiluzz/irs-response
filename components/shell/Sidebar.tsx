@@ -41,7 +41,7 @@ export function Sidebar({ isMobile = false, isOpen = false, onClose }: SidebarPr
       <Box sx={{ 
         p: 3, 
         flexGrow: 1,
-        pt: isMobileView ? { xs: 5, sm: 3 } : 3, // Add top padding on mobile to account for TopBar
+        pt: isMobileView ? { xs: 10, sm: 3 } : 3, // Add top padding on mobile (80px) to account for TopBar (64px) + spacing
       }}>
         {navigation.map((category, categoryIndex) => (
           <Box key={category.id} sx={{ mb: categoryIndex < navigation.length - 1 ? 4 : 0 }}>
