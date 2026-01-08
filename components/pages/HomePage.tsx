@@ -212,66 +212,96 @@ export function HomePage() {
               mt: 2,
             }}
           >
-            <Box>
-              <Card
-                component={Link}
-                href="/notice"
-                sx={{
-                  textDecoration: 'none',
-                  textAlign: 'center',
-                  p: 3,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: 4,
-                  },
+            <Button
+              component={Link}
+              href="/notice"
+              variant="contained"
+              fullWidth
+              sx={{
+                textDecoration: 'none',
+                textTransform: 'none',
+                py: { xs: 3, sm: 4 },
+                px: { xs: 2, sm: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1.5,
+                borderRadius: 2,
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4,
+                  transform: 'translateY(-2px)',
+                },
+                transition: 'all 0.2s ease-in-out',
+              }}
+            >
+              <Typography 
+                variant="h3" 
+                component="span"
+                sx={{ 
+                  fontSize: { xs: '2.5rem', sm: '3.5rem' },
+                  lineHeight: 1,
                 }}
               >
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Typography 
-                    variant="h3" 
-                    sx={{ 
-                      mb: 1,
-                      fontSize: { xs: '2rem', sm: '3rem' }
-                    }}
-                  >
-                    📝
-                  </Typography>
-                  <Typography 
-                    variant="h6" 
-                    fontWeight={600}
-                    sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
-                  >
-                    Generate Notice Response
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-            <Box>
-              <Card
-                component={Link}
-                href="/notice"
-                sx={{
-                  textDecoration: 'none',
-                  textAlign: 'center',
-                  p: 3,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: 4,
-                  },
+                📝
+              </Typography>
+              <Typography 
+                variant="h6" 
+                component="span"
+                fontWeight={600}
+                sx={{ 
+                  fontSize: { xs: '1rem', sm: '1.125rem' },
+                  color: 'inherit',
                 }}
               >
-                <CardContent>
-                  <Typography variant="h3" sx={{ mb: 1 }}>
-                    📚
-                  </Typography>
-                  <Typography variant="h6" fontWeight={600}>
-                    View All Notices
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
+                Generate Notice Response
+              </Typography>
+            </Button>
+            <Button
+              component={Link}
+              href="/notice"
+              variant="contained"
+              fullWidth
+              sx={{
+                textDecoration: 'none',
+                textTransform: 'none',
+                py: { xs: 3, sm: 4 },
+                px: { xs: 2, sm: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1.5,
+                borderRadius: 2,
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4,
+                  transform: 'translateY(-2px)',
+                },
+                transition: 'all 0.2s ease-in-out',
+              }}
+            >
+              <Typography 
+                variant="h3" 
+                component="span"
+                sx={{ 
+                  fontSize: { xs: '2.5rem', sm: '3.5rem' },
+                  lineHeight: 1,
+                }}
+              >
+                📚
+              </Typography>
+              <Typography 
+                variant="h6" 
+                component="span"
+                fontWeight={600}
+                sx={{ 
+                  fontSize: { xs: '1rem', sm: '1.125rem' },
+                  color: 'inherit',
+                }}
+              >
+                View All Notices
+              </Typography>
+            </Button>
           </Box>
         </Card>
       </Container>
