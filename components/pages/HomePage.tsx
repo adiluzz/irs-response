@@ -1,25 +1,33 @@
 'use client';
 
-import React from 'react';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-} from '@mui/material';
-import Link from 'next/link';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import StarIcon from '@mui/icons-material/Star';
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Container,
+    Typography,
+} from '@mui/material';
+import Link from 'next/link';
 
 export function HomePage() {
   return (
     <AuthGuard>
-      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          py: { xs: 2, sm: 3, md: 4 }, 
+          px: { xs: 2, sm: 3 },
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
         {/* Hero Section */}
         <Box
           sx={{

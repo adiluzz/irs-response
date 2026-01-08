@@ -1,26 +1,26 @@
 // app/notice/cp90/page.tsx
 'use client'
 
-import React, { useState, useCallback, useMemo } from 'react'
-import { SplitView } from '@/components/layout/SplitView'
-import { FormPanel } from '@/components/layout/FormPanel'
-import {
-  FormSection,
-  FormField,
-  FormRow,
-  FormActions,
-  Input,
-  Select,
-  Textarea,
-} from '@/components/forms'
-import { Button } from '@/components/ui/Button'
 import { AuthGuard } from '@/components/auth/AuthGuard'
+import {
+    FormActions,
+    FormField,
+    FormRow,
+    FormSection,
+    Input,
+    Select,
+    Textarea,
+} from '@/components/forms'
+import { FormPanel } from '@/components/layout/FormPanel'
+import { SplitView } from '@/components/layout/SplitView'
+import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel'
+import { Button } from '@/components/ui/Button'
+import React, { useCallback, useMemo, useState } from 'react'
 
 // SWITCH: stop using legacy generator router, use the new letter engine
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
 import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
 
-type CopyState = 'idle' | 'copied'
 
 // Align to your engine patterns used in CP14/CP504 pages
 type ResponsePosition = 'dispute' | 'already_paid' | 'request_time_to_pay'
@@ -150,7 +150,6 @@ export default function CP90Page() {
   const [generatedOutput, setGeneratedOutput] = useState('')
   const [hasGenerated, setHasGenerated] = useState(false)
   const [validationError, setValidationError] = useState('')
-  const [copyState, setCopyState] = useState<CopyState>('idle')
 
   const handleChange = useCallback(
     (
@@ -193,7 +192,6 @@ export default function CP90Page() {
     setGeneratedOutput('')
     setHasGenerated(false)
     setValidationError('')
-    setCopyState('idle')
   }, [])
 
   const handleGenerate = useCallback(() => {
@@ -286,117 +284,6 @@ export default function CP90Page() {
     balanceDueReasonLabels,
     responsePositionLabels,
   ])
-
-  const handleCopy = useCallback(async () => {
-    if (!generatedOutput) return
-    try {
-      await navigator.clipboard.writeText(generatedOutput)
-      setCopyState('copied')
-      setTimeout(() => setCopyState('idle'), 2000)
-    } catch {
-      setCopyState('idle')
-    }
-  }, [generatedOutput])
-
-  const handleDownload = useCallback(() => {
-    if (!generatedOutput) return
-    const blob = new Blob([generatedOutput], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `cp90-response-${formData.taxYear || 'taxyear'}-${Date.now()}.txt`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }, [generatedOutput, formData.taxYear])
-
-  // Minimal Print-to-PDF (opens print dialog; user saves as PDF)
-  const handlePdf = useCallback(() => {
-    if (!generatedOutput) return
-
-    const safeText = generatedOutput
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-
-    const wmOpacity = IS_PAID ? 0.06 : 0.10
-
-    const html = `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>TAC Response PDF</title>
-  <style>
-    @page { margin: 0.75in; }
-    html, body { height: 100%; }
-    body {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      color: #111827;
-      margin: 0;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-      background: #ffffff;
-    }
-    .page {
-      position: relative;
-      min-height: 100vh;
-      padding: 0.75in;
-      box-sizing: border-box;
-      background: #ffffff;
-    }
-    .wm {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      user-select: none;
-      opacity: ${wmOpacity};
-      filter: grayscale(1) contrast(1.05);
-    }
-    .wm::before {
-      content: "";
-      width: 520px;
-      height: 520px;
-      background-image: url('/brand/f3-crest.png');
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: contain;
-      transform: translateY(-40px);
-    }
-    pre {
-      position: relative;
-      z-index: 1;
-      white-space: pre-wrap;
-      word-break: break-word;
-      margin: 0;
-      font-size: 12px;
-      line-height: 1.7;
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="wm" aria-hidden="true"></div>
-    <pre>${safeText}</pre>
-  </div>
-  <script>
-    window.onload = () => {
-      window.focus();
-      window.print();
-    };
-  </script>
-</body>
-</html>`
-
-    const w = window.open('', '_blank', 'noopener,noreferrer')
-    if (!w) return
-    w.document.open()
-    w.document.write(html)
-    w.document.close()
-  }, [generatedOutput])
 
   const canGenerate = Boolean(
     formData.taxpayerName.trim() &&
@@ -688,150 +575,12 @@ export default function CP90Page() {
         </FormActions>
       </FormPanel>
 
-      <aside
-        style={{
-          width: 'var(--preview-width)',
-          flexShrink: 0,
-          backgroundColor: 'var(--gray-100)',
-          borderLeft: '1px solid var(--gray-200)',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          overflow: 'hidden',
-        }}
-      >
-        <header
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--gray-200)',
-            backgroundColor: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexShrink: 0,
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                fontSize: 'var(--text-sm)',
-                fontWeight: 600,
-                color: 'var(--gray-900)',
-                marginBottom: '2px',
-              }}
-            >
-              Document Preview
-            </h2>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)' }}>
-              {hasGenerated ? 'Draft ready for review' : 'Complete fields and generate'}
-            </p>
-          </div>
-
-          {hasGenerated && (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button variant="ghost" size="sm" onClick={handleCopy}>
-                {copyState === 'copied' ? 'Copied' : 'Copy'}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handlePdf}>
-                PDF
-              </Button>
-              <Button variant="secondary" size="sm" onClick={handleDownload}>
-                Download
-              </Button>
-            </div>
-          )}
-        </header>
-
-        <div
-          style={{
-            flex: 1,
-            overflow: 'auto',
-            padding: '24px 20px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <div style={{ width: '100%', maxWidth: 860, position: 'relative' }}>
-            {hasGenerated ? (
-              <div
-                style={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid var(--gray-200)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow:
-                    '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03)',
-                  padding: '40px 36px',
-                  minHeight: '600px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Watermark inside paper */}
-                <div
-                  aria-hidden
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    pointerEvents: 'none',
-                    userSelect: 'none',
-                    opacity: IS_PAID ? 0.06 : 0.10,
-                    filter: 'grayscale(1) contrast(1.05)',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 420,
-                      height: 420,
-                      backgroundImage: `url('/brand/f3-crest.png')`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center',
-                      backgroundSize: 'contain',
-                      transform: 'translateY(-24px)',
-                    }}
-                  />
-                </div>
-
-                <pre
-                  style={{
-                    position: 'relative',
-                    zIndex: 1,
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '12px',
-                    lineHeight: '1.7',
-                    color: 'var(--gray-800)',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    margin: 0,
-                  }}
-                >
-                  {generatedOutput}
-                </pre>
-              </div>
-            ) : (
-              <div
-                style={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  color: 'var(--gray-400)',
-                  minHeight: 520,
-                }}
-              >
-                <p style={{ fontWeight: 500, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                  Awaiting Input
-                </p>
-                <p style={{ fontSize: '12px' }}>Complete required fields and click Generate</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
+      <NoticePreviewPanel
+        generatedOutput={generatedOutput}
+        noticeType="CP90"
+        showPdfButton={true}
+        isPaid={IS_PAID}
+      />
     </SplitView>
     </AuthGuard>
   )

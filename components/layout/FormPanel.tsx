@@ -1,7 +1,7 @@
 'use client';
 
+import { Box, Card, CardContent, Chip, Typography } from '@mui/material';
 import React from 'react';
-import { Box, Typography, Card, CardContent, Chip } from '@mui/material';
 
 interface FormPanelProps {
   title: string;
@@ -16,11 +16,13 @@ export function FormPanel({ title, subtitle, children, noticeBadge }: FormPanelP
       sx={{
         flex: 1,
         overflowY: 'auto',
+        overflowX: 'hidden',
         p: { xs: 2, sm: 3, md: 4 },
         backgroundColor: 'background.default',
         width: '100%',
         maxWidth: '100%',
         boxSizing: 'border-box',
+        minHeight: 0, // Allow flex shrinking
       }}
     >
       {/* Brand header */}

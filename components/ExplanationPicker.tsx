@@ -3,6 +3,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { Box, Typography, Select, MenuItem, FormControl, InputLabel, TextField } from '@mui/material';
 
 export type ReasonOption = {
   id: string;
@@ -40,99 +41,90 @@ export function ExplanationPicker({
   }, [value, userNote, generateExpandedExplanation]);
 
   return (
-    <div className="explanation-picker" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 2.5 } }}>
       {/* Reason Dropdown */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <label
-          htmlFor="explanation-reason"
-          style={{ fontSize: '14px', fontWeight: 500, color: '#374151' }}
-        >
-          {label}
-        </label>
-        <select
-          id="explanation-reason"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            fontSize: '14px',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="">— Select a reason —</option>
-          {reasons.map((reason) => (
-            <option key={reason.id} value={reason.id}>
-              {reason.title}
-            </option>
-          ))}
-        </select>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <FormControl fullWidth>
+          <InputLabel id="explanation-reason-label" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+            {label}
+          </InputLabel>
+          <Select
+            labelId="explanation-reason-label"
+            id="explanation-reason"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            label={label}
+            sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+          >
+            <MenuItem value="">
+              <em>— Select a reason —</em>
+            </MenuItem>
+            {reasons.map((reason) => (
+              <MenuItem key={reason.id} value={reason.id}>
+                {reason.title}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         {selectedReason && (
-          <span style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+          <Typography variant="caption" sx={{ fontSize: { xs: '0.75rem', sm: '0.8125rem' }, color: 'text.secondary', mt: 0.5 }}>
             {selectedReason.short}
-          </span>
+          </Typography>
         )}
-      </div>
+      </Box>
 
       {/* User Note Textarea */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <label
-          htmlFor="user-note"
-          style={{ fontSize: '14px', fontWeight: 500, color: '#374151' }}
-        >
-          Additional Details (Optional)
-        </label>
-        <textarea
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <TextField
           id="user-note"
+          label="Additional Details (Optional)"
           value={userNote}
           onChange={(e) => onUserNoteChange(e.target.value)}
           placeholder="Add a brief note with specific details (1-2 sentences)..."
+          multiline
           rows={2}
-          maxLength={300}
-          style={{
-            padding: '8px 12px',
-            fontSize: '14px',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
-            resize: 'vertical',
-            fontFamily: 'inherit',
+          inputProps={{ maxLength: 300 }}
+          fullWidth
+          sx={{
+            '& .MuiInputBase-input': {
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+            },
           }}
         />
-        <span style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'right' }}>
+        <Typography variant="caption" sx={{ fontSize: { xs: '0.6875rem', sm: '0.75rem' }, color: 'text.secondary', textAlign: 'right' }}>
           {userNote.length}/300
-        </span>
-      </div>
+        </Typography>
+      </Box>
 
       {/* Expanded Preview */}
       {value && expandedPreview && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label
-            style={{ fontSize: '14px', fontWeight: 500, color: '#374151' }}
-          >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography variant="body2" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, fontWeight: 500 }}>
             Preview of Expanded Explanation
-          </label>
-          <div
-            style={{
-              padding: '12px',
-              fontSize: '13px',
-              lineHeight: '1.5',
-              backgroundColor: '#f9fafb',
-              border: '1px solid #e5e7eb',
-              borderRadius: '6px',
-              color: '#4b5563',
+          </Typography>
+          <Box
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+              lineHeight: 1.5,
+              backgroundColor: 'grey.50',
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1.5,
+              color: 'text.secondary',
               whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
             }}
           >
             {expandedPreview}
-          </div>
-          <span style={{ fontSize: '11px', color: '#9ca3af' }}>
+          </Box>
+          <Typography variant="caption" sx={{ fontSize: { xs: '0.6875rem', sm: '0.75rem' }, color: 'text.secondary' }}>
             This text will be inserted into your letter.
-          </span>
-        </div>
+          </Typography>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
 

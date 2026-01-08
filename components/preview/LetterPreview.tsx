@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
+import { Box, Button, Paper, Typography } from '@mui/material';
+import React from 'react';
 
 type LetterPreviewProps = {
   noticeType: string;
@@ -104,28 +104,48 @@ export function LetterPreview({ noticeType, content }: LetterPreviewProps) {
             maxWidth: { xs: '100%', sm: '100%', md: '8.5in' },
             mx: 'auto',
             boxSizing: 'border-box',
+            overflowX: 'hidden',
           }}
         >
           {content ? (
             <Box
               sx={{
                 width: '100%',
+                maxWidth: '100%',
                 overflowWrap: 'break-word',
                 wordBreak: 'break-word',
+                overflowX: 'hidden',
+                boxSizing: 'border-box',
                 '& p': {
                   mb: 2,
                   lineHeight: 1.6,
                   fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '1rem' },
                   width: '100%',
+                  maxWidth: '100%',
+                  overflowWrap: 'break-word',
+                  wordBreak: 'break-word',
                 },
                 '& h1, & h2, & h3': {
                   mb: 2,
                   mt: 3,
                   fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
                   width: '100%',
+                  maxWidth: '100%',
+                  overflowWrap: 'break-word',
+                  wordBreak: 'break-word',
                 },
                 '& *': {
                   maxWidth: '100%',
+                  boxSizing: 'border-box',
+                },
+                '& pre': {
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  overflowX: 'hidden',
+                  width: '100%',
+                  maxWidth: '100%',
+                  fontSize: { xs: '0.6875rem', sm: '0.75rem', md: '0.875rem' },
                 },
               }}
               dangerouslySetInnerHTML={{ __html: content }}

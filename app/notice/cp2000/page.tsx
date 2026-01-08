@@ -1,22 +1,22 @@
 // app/notice/cp2000/page.tsx
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { SplitView } from '@/components/layout/SplitView';
-import { FormPanel } from '@/components/layout/FormPanel';
-import {
-  FormSection,
-  FormField,
-  FormRow,
-  FormActions,
-  Input,
-  Select,
-  Textarea,
-} from '@/components/forms';
-import { Button } from '@/components/ui/Button';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import {
+    FormActions,
+    FormField,
+    FormRow,
+    FormSection,
+    Input,
+    Select,
+    Textarea,
+} from '@/components/forms';
+import { FormPanel } from '@/components/layout/FormPanel';
+import { SplitView } from '@/components/layout/SplitView';
+import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel';
+import { Button } from '@/components/ui/Button';
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
-import { LetterPreview } from '@/components/preview/LetterPreview';
+import React, { useCallback, useRef, useState } from 'react';
 
 function formatSSN(value: string): string {
   const digits = value.replace(/\D/g, '');
@@ -75,18 +75,8 @@ export default function CP2000Page() {
   const [generatedOutput, setGeneratedOutput] = useState('');
   const [hasGenerated, setHasGenerated] = useState(false);
   const [validationError, setValidationError] = useState('');
-  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
-
   // Preview scroll container ref (used to force scrollTop=0 after generation)
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!hasGenerated) return;
-
-    requestAnimationFrame(() => {
-      if (previewScrollRef.current) previewScrollRef.current.scrollTop = 0;
-    });
-  }, [hasGenerated, generatedOutput]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -119,7 +109,6 @@ export default function CP2000Page() {
     setGeneratedOutput('');
     setHasGenerated(false);
     setValidationError('');
-    setCopyState('idle');
   }, []);
 
   const handleGenerate = useCallback(() => {
@@ -189,29 +178,6 @@ export default function CP2000Page() {
     }
   }, [formData, includeReferences]);
 
-  const handleCopy = useCallback(async () => {
-    if (!generatedOutput) return;
-    try {
-      await navigator.clipboard.writeText(generatedOutput);
-      setCopyState('copied');
-      setTimeout(() => setCopyState('idle'), 2000);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [generatedOutput]);
-
-  const handleDownload = useCallback(() => {
-    if (!generatedOutput) return;
-    const blob = new Blob([generatedOutput], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `cp2000-response-${formData.taxYear}-${Date.now()}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [generatedOutput, formData.taxYear]);
 
   const canGenerate = Boolean(
     formData.taxpayerName.trim() &&
@@ -441,101 +407,12 @@ export default function CP2000Page() {
         </FormActions>
       </FormPanel>
 
-      <aside
-        style={{
-          width: '520px',
-          minWidth: '520px',
-          maxWidth: '520px',
-          flexShrink: 0,
-          backgroundColor: 'var(--gray-100)',
-          borderLeft: '1px solid var(--gray-200)',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          overflow: 'hidden',
-        }}
-      >
-        <header
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--gray-200)',
-            backgroundColor: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexShrink: 0,
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                fontSize: 'var(--text-sm)',
-                fontWeight: 600,
-                color: 'var(--gray-900)',
-                marginBottom: '2px',
-              }}
-            >
-              Document Preview
-            </h2>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)' }}>
-              {hasGenerated ? 'Draft ready for review' : 'Complete fields and generate'}
-            </p>
-          </div>
-
-          {/* ✅ always visible; disabled until output exists */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Button variant="ghost" size="sm" onClick={handleCopy} disabled={!generatedOutput}>
-              {copyState === 'copied' ? 'Copied' : 'Copy'}
-            </Button>
-            <Button variant="secondary" size="sm" onClick={handleDownload} disabled={!generatedOutput}>
-              Download
-            </Button>
-          </div>
-        </header>
-
-        <div
-          ref={previewScrollRef}
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            padding: '24px 20px',
-          }}
-        >
-          {hasGenerated ? (
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid var(--gray-200)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03)',
-                padding: '40px 36px',
-                minHeight: '600px',
-              }}
-            >
-              {/* ✅ same finished typography as other notices */}
-              <LetterPreview noticeType="CP2000" />
-            </div>
-          ) : (
-            <div
-              style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                color: 'var(--gray-400)',
-              }}
-            >
-              <p style={{ fontWeight: 500, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                Awaiting Input
-              </p>
-              <p style={{ fontSize: '12px' }}>Complete required fields and click Generate</p>
-            </div>
-          )}
-        </div>
-      </aside>
+      <NoticePreviewPanel
+        generatedOutput={generatedOutput}
+        noticeType="CP2000"
+        useLetterPreview={true}
+        previewScrollRef={previewScrollRef}
+      />
     </SplitView>
     </AuthGuard>
   );

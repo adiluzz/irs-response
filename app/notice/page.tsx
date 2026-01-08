@@ -1,18 +1,17 @@
 'use client';
-import React from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Card,
-  CardContent,
-  CardActionArea,
-  Chip,
-} from '@mui/material';
-import Link from 'next/link';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import {
+    Box,
+    Card,
+    CardActionArea,
+    CardContent,
+    Chip,
+    Container,
+    Typography,
+} from '@mui/material';
+import Link from 'next/link';
 
 const availableNotices = [
   {
@@ -75,7 +74,16 @@ const availableNotices = [
 export default function NoticeIndexPage() {
   return (
     <AuthGuard>
-      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          py: { xs: 2, sm: 3, md: 4 }, 
+          px: { xs: 2, sm: 3 },
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
         {/* Page Header */}
         <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 5, md: 6 } }}>
           <Chip

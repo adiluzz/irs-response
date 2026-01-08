@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { Box } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Box } from '@mui/material';
-import { TopBar } from './TopBar';
+import React, { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -77,10 +77,17 @@ export function AppShell({ children }: AppShellProps) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { md: showSidebar ? `calc(100% - 280px)` : '100%' },
+          p: 0, // Remove padding here - let child components handle their own padding
+          width: { 
+            xs: '100%',
+            md: showSidebar ? `calc(100% - 280px)` : '100%' 
+          },
           mt: showTopBar ? '64px' : 0,
-          minHeight: '100vh',
+          minHeight: { xs: 'calc(100vh - 64px)', md: showTopBar ? 'calc(100vh - 64px)' : '100vh' },
+          maxWidth: '100%',
+          overflowX: 'hidden', // Prevent horizontal scroll
+          position: 'relative',
+          zIndex: 0, // Ensure content is below sidebar
           transition: (theme) => theme.transitions.create(['width', 'margin'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,

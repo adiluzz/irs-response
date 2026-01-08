@@ -1,20 +1,21 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { SplitView } from '@/components/layout/SplitView';
-import { FormPanel } from '@/components/layout/FormPanel';
-import {
-  FormSection,
-  FormField,
-  FormRow,
-  FormActions,
-  Input,
-  Select,
-  Textarea,
-} from '@/components/forms';
-import { Button } from '@/components/ui/Button';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import {
+    FormActions,
+    FormField,
+    FormRow,
+    FormSection,
+    Input,
+    Select,
+    Textarea,
+} from '@/components/forms';
+import { FormPanel } from '@/components/layout/FormPanel';
+import { SplitView } from '@/components/layout/SplitView';
+import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel';
+import { Button } from '@/components/ui/Button';
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
+import React, { useCallback, useState } from 'react';
 
 export default function CP501Page() {
   const [formData, setFormData] = useState({
@@ -32,7 +33,6 @@ export default function CP501Page() {
   const [generatedOutput, setGeneratedOutput] = useState('');
   const [hasGenerated, setHasGenerated] = useState(false);
   const [validationError, setValidationError] = useState('');
-  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -63,7 +63,6 @@ export default function CP501Page() {
     setGeneratedOutput('');
     setHasGenerated(false);
     setValidationError('');
-    setCopyState('idle');
   }, []);
 
   const handleGenerate = useCallback(() => {
@@ -125,29 +124,6 @@ export default function CP501Page() {
     }
   }, [formData]);
 
-  const handleCopy = useCallback(async () => {
-    if (!generatedOutput) return;
-    try {
-      await navigator.clipboard.writeText(generatedOutput);
-      setCopyState('copied');
-      setTimeout(() => setCopyState('idle'), 2000);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  }, [generatedOutput]);
-
-  const handleDownload = useCallback(() => {
-    if (!generatedOutput) return;
-    const blob = new Blob([generatedOutput], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `cp501-response-${formData.taxYear}-${Date.now()}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [generatedOutput, formData.taxYear]);
 
   const canGenerate = Boolean(
     formData.taxpayerName.trim() &&
@@ -322,131 +298,10 @@ export default function CP501Page() {
         </FormActions>
       </FormPanel>
 
-      <aside
-        style={{
-          width: 'var(--preview-width)',
-          flexShrink: 0,
-          backgroundColor: 'var(--gray-100)',
-          borderLeft: '1px solid var(--gray-200)',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          overflow: 'hidden',
-        }}
-      >
-        <header
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--gray-200)',
-            backgroundColor: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexShrink: 0,
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                fontSize: 'var(--text-sm)',
-                fontWeight: 600,
-                color: 'var(--gray-900)',
-                marginBottom: '2px',
-              }}
-            >
-              Document Preview
-            </h2>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-500)' }}>
-              {hasGenerated ? 'Draft ready for review' : 'Complete fields and generate'}
-            </p>
-          </div>
-
-          {hasGenerated && (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button variant="ghost" size="sm" onClick={handleCopy}>
-                {copyState === 'copied' ? 'Copied' : 'Copy'}
-              </Button>
-              <Button variant="secondary" size="sm" onClick={handleDownload}>
-                Download
-              </Button>
-            </div>
-          )}
-        </header>
-
-        <div style={{ flex: 1, overflow: 'auto', padding: '24px 20px' }}>
-          {hasGenerated ? (
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid var(--gray-200)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03)',
-                padding: '40px 36px',
-                minHeight: '600px',
-              }}
-            >
-              <pre
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '12px',
-                  lineHeight: '1.7',
-                  color: 'var(--gray-800)',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  margin: 0,
-                }}
-              >
-                {generatedOutput}
-              </pre>
-            </div>
-          ) : (
-            <div
-              style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                color: 'var(--gray-400)',
-              }}
-            >
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--gray-200)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '16px',
-                }}
-              >
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14,2 14,8 20,8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-              </div>
-              <p style={{ fontWeight: 500, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                Awaiting Input
-              </p>
-              <p style={{ fontSize: '12px' }}>
-                Complete required fields and click Generate
-              </p>
-            </div>
-          )}
-        </div>
-      </aside>
+      <NoticePreviewPanel
+        generatedOutput={generatedOutput}
+        noticeType="CP501"
+      />
     </SplitView>
     </AuthGuard>
   );

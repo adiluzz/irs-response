@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Typography,
-  Box,
-  Divider,
-} from '@mui/material';
 import { navigation } from '@/lib/constants/navigation';
+import {
+    Box,
+    Drawer,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    Typography
+} from '@mui/material';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -147,9 +146,11 @@ export function Sidebar({ isMobile = false, isOpen = false, onClose }: SidebarPr
         }}
         sx={{
           display: { xs: 'block', md: 'none' },
+          zIndex: (theme) => theme.zIndex.drawer,
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
+            zIndex: (theme) => theme.zIndex.drawer,
           },
         }}
       >
@@ -163,10 +164,16 @@ export function Sidebar({ isMobile = false, isOpen = false, onClose }: SidebarPr
       variant="permanent"
       sx={{
         display: { xs: 'none', md: 'block' },
+        width: drawerWidth,
+        flexShrink: 0,
         '& .MuiDrawer-paper': {
           boxSizing: 'border-box',
           width: drawerWidth,
           top: 64, // AppBar height
+          height: 'calc(100% - 64px)',
+          borderRight: '1px solid',
+          borderColor: 'divider',
+          zIndex: 1, // Above main content but below TopBar
         },
       }}
       open
