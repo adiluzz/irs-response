@@ -215,7 +215,7 @@ export function HomePage() {
             <Button
               component={Link}
               href="/notice"
-              variant="contained"
+              variant="text"
               fullWidth
               sx={{
                 textDecoration: 'none',
@@ -227,9 +227,9 @@ export function HomePage() {
                 alignItems: 'center',
                 gap: 1.5,
                 borderRadius: 2,
-                boxShadow: 2,
+                backgroundColor: 'transparent',
                 '&:hover': {
-                  boxShadow: 4,
+                  backgroundColor: 'action.hover',
                   transform: 'translateY(-2px)',
                 },
                 transition: 'all 0.2s ease-in-out',
@@ -251,7 +251,7 @@ export function HomePage() {
                 fontWeight={600}
                 sx={{ 
                   fontSize: { xs: '1rem', sm: '1.125rem' },
-                  color: 'inherit',
+                  color: 'text.primary',
                 }}
               >
                 Generate Notice Response
@@ -260,7 +260,7 @@ export function HomePage() {
             <Button
               component={Link}
               href="/notice"
-              variant="contained"
+              variant="text"
               fullWidth
               sx={{
                 textDecoration: 'none',
@@ -272,9 +272,9 @@ export function HomePage() {
                 alignItems: 'center',
                 gap: 1.5,
                 borderRadius: 2,
-                boxShadow: 2,
+                backgroundColor: 'transparent',
                 '&:hover': {
-                  boxShadow: 4,
+                  backgroundColor: 'action.hover',
                   transform: 'translateY(-2px)',
                 },
                 transition: 'all 0.2s ease-in-out',
