@@ -9,28 +9,32 @@ interface NavItemProps {
   href?: string;
   status: NavItemStatus;
   isActive?: boolean;
+  onClick?: () => void;
 }
 
-export function NavItem({ label, href, status, isActive = false }: NavItemProps) {
+export function NavItem({ label, href, status, isActive = false, onClick }: NavItemProps) {
   const isClickable = status === 'available' || status === 'active';
   
   const baseStyles: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '8px 12px',
-    fontSize: '13px',
+    padding: 'var(--space-3) var(--space-4)',
+    fontSize: 'var(--text-sm)',
     fontWeight: 500,
-    borderRadius: 'var(--radius-sm)',
+    borderRadius: 'var(--radius-lg)',
     textDecoration: 'none',
-    transition: 'all 0.15s ease',
+    transition: 'all var(--transition-base)',
     cursor: isClickable ? 'pointer' : 'default',
+    position: 'relative',
   };
 
   const stateStyles: React.CSSProperties = isActive
     ? {
-        backgroundColor: 'var(--blue-50)',
-        color: 'var(--blue-700)',
+        backgroundColor: 'var(--primary-50)',
+        color: 'var(--primary-700)',
+        fontWeight: 600,
+        boxShadow: 'var(--shadow-sm)',
       }
     : isClickable
     ? {
@@ -48,11 +52,14 @@ export function NavItem({ label, href, status, isActive = false }: NavItemProps)
     status === 'coming-soon' ? (
       <span
         style={{
-          fontSize: '10px',
-          fontWeight: 500,
+          fontSize: 'var(--text-xs)',
+          fontWeight: 600,
           color: 'var(--gray-400)',
           textTransform: 'uppercase',
-          letterSpacing: '0.02em',
+          letterSpacing: '0.05em',
+          padding: '2px 6px',
+          backgroundColor: 'var(--gray-100)',
+          borderRadius: 'var(--radius-sm)',
         }}
       >
         Soon
@@ -60,11 +67,11 @@ export function NavItem({ label, href, status, isActive = false }: NavItemProps)
     ) : status === 'disabled' ? (
       <span
         style={{
-          fontSize: '10px',
-          fontWeight: 500,
+          fontSize: 'var(--text-xs)',
+          fontWeight: 600,
           color: 'var(--gray-400)',
           textTransform: 'uppercase',
-          letterSpacing: '0.02em',
+          letterSpacing: '0.05em',
         }}
       >
         N/A
@@ -78,9 +85,31 @@ export function NavItem({ label, href, status, isActive = false }: NavItemProps)
     </>
   );
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+  };
+
   if (isClickable && href) {
     return (
-      <Link href={href} style={combinedStyles}>
+      <Link 
+        href={href} 
+        style={combinedStyles}
+        onClick={handleClick}
+        onMouseEnter={(e) => {
+          if (isClickable && !isActive) {
+            e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+            e.currentTarget.style.transform = 'translateX(4px)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (isClickable && !isActive) {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.transform = 'translateX(0)';
+          }
+        }}
+      >
         {content}
       </Link>
     );

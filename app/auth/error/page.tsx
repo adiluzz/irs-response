@@ -1,10 +1,23 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
-export default function ErrorPage() {
+export const dynamic = 'force-dynamic';
+
+function ErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams?.get('error');
 
@@ -20,74 +33,112 @@ export default function ErrorPage() {
   const message = errorMessages[error || ''] || errorMessages.Default;
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'var(--gray-50)',
-        padding: 'var(--space-4)',
+        background: (theme) =>
+          `linear-gradient(135deg, ${theme.palette.error.light} 0%, ${theme.palette.error.main} 100%)`,
+        p: 3,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '440px',
-          backgroundColor: '#ffffff',
-          border: '1px solid var(--gray-200)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--space-8)',
-          boxShadow: 'var(--shadow-paper)',
-          textAlign: 'center',
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.1,
+          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+          backgroundSize: '40px 40px',
         }}
-      >
-        <div
-          style={{
-            fontSize: '48px',
-            color: 'var(--red-600)',
-            marginBottom: 'var(--space-4)',
+      />
+
+      <Container maxWidth="sm">
+        <Card
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            borderRadius: 4,
+            boxShadow: 8,
+            textAlign: 'center',
           }}
         >
-          ⚠
-        </div>
-        <h1
-          style={{
-            fontSize: 'var(--text-2xl)',
-            fontWeight: 700,
-            color: 'var(--gray-900)',
-            marginBottom: 'var(--space-4)',
-          }}
-        >
-          Authentication Error
-        </h1>
-        <p
-          style={{
-            fontSize: 'var(--text-md)',
-            color: 'var(--gray-600)',
-            marginBottom: 'var(--space-6)',
-            lineHeight: 'var(--leading-relaxed)',
-          }}
-        >
-          {message}
-        </p>
-        <div
-          style={{
+          <CardContent sx={{ p: { xs: 4, sm: 6 } }}>
+            <Box
+              sx={{
+                width: { xs: 64, sm: 80 },
+                height: { xs: 64, sm: 80 },
+                borderRadius: '50%',
+                backgroundColor: 'error.light',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+                mb: 3,
+              }}
+            >
+              <ErrorOutlineIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'error.main' }} />
+            </Box>
+            <Typography variant="h4" gutterBottom fontWeight={800} sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+              Authentication Error
+            </Typography>
+            <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
+              {message}
+            </Alert>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2,
+                justifyContent: 'center',
+              }}
+            >
+              <Button
+                component={Link}
+                href="/auth/login"
+                variant="contained"
+                fullWidth={true}
+                sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 150 } }}
+              >
+                Go to Login
+              </Button>
+              <Button
+                component={Link}
+                href="/auth/signup"
+                variant="outlined"
+                fullWidth={true}
+                sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 150 } }}
+              >
+                Sign Up
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
+  );
+}
+
+export default function ErrorPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            minHeight: '100vh',
             display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--space-3)',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <Link href="/auth/login" style={{ textDecoration: 'none' }}>
-            <Button fullWidth>Go to Login</Button>
-          </Link>
-          <Link href="/auth/signup" style={{ textDecoration: 'none' }}>
-            <Button variant="outline" fullWidth>
-              Sign Up
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
+          <CircularProgress />
+        </Box>
+      }
+    >
+      <ErrorContent />
+    </Suspense>
   );
 }

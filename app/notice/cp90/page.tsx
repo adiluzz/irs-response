@@ -413,23 +413,8 @@ export default function CP90Page() {
       <FormPanel
         title="TAC Emergency IRS Responder"
         subtitle="Deterministic IRS Notice Response Engine"
+        noticeBadge="CP90 — Final Notice of Intent to Levy"
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '6px 12px',
-            backgroundColor: 'var(--gray-900)',
-            color: '#ffffff',
-            fontSize: 'var(--text-xs)',
-            fontWeight: 600,
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '24px',
-            letterSpacing: '0.025em',
-          }}
-        >
-          CP90 — Final Notice of Intent to Levy
-        </div>
 
         <FormSection
           title="Response Context"

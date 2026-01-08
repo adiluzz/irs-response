@@ -1,0 +1,31 @@
+# Copy this file to terraform.tfvars and fill in the values
+# DO NOT commit terraform.tfvars to git!
+
+aws_region = "us-east-1"
+
+# SSH Key Pair name (must exist in AWS EC2)
+ssh_key_name = "your-ec2-key-pair-name"
+
+# Domain configuration
+domain_name = "viseething.com"
+
+# GitHub repository
+github_repo_url = "https://github.com/adiluzz/irs-response.git"
+github_branch   = "main"
+
+# MongoDB credentials
+mongodb_admin_user = "admin"
+mongodb_admin_pass = "CHANGE_THIS_STRONG_PASSWORD"
+
+# NextAuth secret (generate with: openssl rand -base64 32)
+nextauth_secret = "GENERATE_A_SECURE_RANDOM_STRING_HERE"
+
+# Email configuration
+email_host     = "smtp.gmail.com"
+email_port     = "587"
+email_user     = "your-email@gmail.com"
+email_password = "your-app-password"
+email_from     = "noreply@viseething.com"
+
+# Instance configuration
+instance_type = "t3.medium"  # t3.small, t3.medium, t3.large, etc.

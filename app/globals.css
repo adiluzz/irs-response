@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 * {
   box-sizing: border-box;
@@ -8,7 +8,7 @@
 
 :root {
   /* ─────────────────────────────────────────────────────────
-     NEUTRALS
+     MODERN COLOR SYSTEM
   ───────────────────────────────────────────────────────── */
   --gray-25: #fcfcfd;
   --gray-50: #f9fafb;
@@ -23,51 +23,41 @@
   --gray-900: #111827;
   --gray-950: #030712;
 
-  /* ─────────────────────────────────────────────────────────
-     PRIMARY (Authority Blue)
-  ───────────────────────────────────────────────────────── */
-  --blue-50: #eff6ff;
-  --blue-100: #dbeafe;
-  --blue-200: #bfdbfe;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-700: #1d4ed8;
+  /* Primary Brand Colors - Modern Blue Gradient */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
 
-  /* ─────────────────────────────────────────────────────────
-     SEMANTIC
-  ───────────────────────────────────────────────────────── */
-  --red-50: #fef2f2;
-  --red-100: #fee2e2;
-  --red-600: #dc2626;
-  --green-50: #f0fdf4;
-  --green-600: #16a34a;
-  --amber-50: #fffbeb;
-  --amber-600: #d97706;
+  /* Accent Colors */
+  --accent-purple: #8b5cf6;
+  --accent-pink: #ec4899;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
 
-  /* ─────────────────────────────────────────────────────────
-     BRAND (F3)
-  ───────────────────────────────────────────────────────── */
+  /* Semantic Colors */
+  --success-50: #f0fdf4;
+  --success-100: #dcfce7;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --error-50: #fef2f2;
+  --error-100: #fee2e2;
+  --error-500: #ef4444;
+  --error-600: #dc2626;
+  --warning-50: #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+
+  /* Brand Gold (Legacy) */
   --brand-gold-500: #b89b5e;
   --brand-gold-700: #8f7a3d;
-
-  /* ─────────────────────────────────────────────────────────
-     PREVIEW WATERMARK (FREE vs PAID)
-  ───────────────────────────────────────────────────────── */
-  --wm-pane-opacity-free: 0.06;
-  --wm-pane-opacity-paid: 0.00;
-  --wm-pane-size-free: 360px;
-  --wm-pane-y: 52%;
-
-  --wm-mark-size: 56px;
-  --wm-mark-opacity: 0.14;
-  --wm-mark-offset: 18px;
-
-  /* ─────────────────────────────────────────────────────────
-     LAYOUT
-  ───────────────────────────────────────────────────────── */
-  --topbar-height: 56px;
-  --sidebar-width: 256px;
-  --preview-width: 520px;
 
   /* ─────────────────────────────────────────────────────────
      TYPOGRAPHY
@@ -75,65 +65,91 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'SF Mono', Consolas, Menlo, monospace;
 
-  --text-xs: 11px;
-  --text-sm: 13px;
-  --text-base: 14px;
-  --text-md: 15px;
-  --text-lg: 16px;
-  --text-xl: 18px;
-  --text-2xl: 20px;
-  --text-3xl: 24px;
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+  --text-5xl: 3rem;      /* 48px */
 
   --leading-tight: 1.25;
   --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
+  --leading-relaxed: 1.75;
+  --leading-loose: 2;
 
   /* ─────────────────────────────────────────────────────────
      SPACING
   ───────────────────────────────────────────────────────── */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+  --space-20: 5rem;    /* 80px */
 
   /* ─────────────────────────────────────────────────────────
-     SHADOWS
+     LAYOUT
   ───────────────────────────────────────────────────────── */
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08);
-  --shadow-paper: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 12px 0 rgb(0 0 0 / 0.03);
+  --topbar-height: 64px;
+  --sidebar-width: 280px;
+  --sidebar-width-mobile: 280px;
+  --preview-width: 520px;
+  --container-max-width: 1280px;
 
   /* ─────────────────────────────────────────────────────────
-     RADII
+     SHADOWS & DEPTH
   ───────────────────────────────────────────────────────── */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-paper: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
 
   /* ─────────────────────────────────────────────────────────
-     FOCUS
+     BORDER RADIUS
   ───────────────────────────────────────────────────────── */
-  --ring-width: 3px;
-  --ring-color: var(--blue-100);
-  --ring-color-error: var(--red-100);
+  --radius-xs: 0.25rem;  /* 4px */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem;   /* 8px */
+  --radius-lg: 0.75rem;  /* 12px */
+  --radius-xl: 1rem;     /* 16px */
+  --radius-2xl: 1.5rem;  /* 24px */
+  --radius-full: 9999px;
 
   /* ─────────────────────────────────────────────────────────
-     TRANSITIONS
+     TRANSITIONS & ANIMATIONS
   ───────────────────────────────────────────────────────── */
-  --transition-fast: 100ms ease;
-  --transition-base: 150ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ─────────────────────────────────────────────────────────
+     GRADIENTS
+  ───────────────────────────────────────────────────────── */
+  --gradient-primary: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  --gradient-hero: linear-gradient(135deg, var(--primary-600) 0%, var(--accent-purple) 100%);
+  --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  --gradient-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.1) 100%);
 }
 
 html {
   height: 100%;
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -142,38 +158,52 @@ body {
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   color: var(--gray-900);
-  background-color: var(--gray-50);
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
+/* ─────────────────────────────────────────────────────────
+   FOCUS STATES
+───────────────────────────────────────────────────────── */
 :focus {
   outline: none;
 }
 
 :focus-visible {
-  outline: 2px solid var(--blue-500);
+  outline: 2px solid var(--primary-500);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
+/* ─────────────────────────────────────────────────────────
+   BUTTONS
+───────────────────────────────────────────────────────── */
 button {
   font-family: inherit;
   font-size: inherit;
   cursor: pointer;
   background: none;
   border: none;
+  transition: all var(--transition-base);
 }
 
 button:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
+/* ─────────────────────────────────────────────────────────
+   FORM ELEMENTS
+───────────────────────────────────────────────────────── */
 input,
 select,
 textarea {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+  transition: all var(--transition-base);
 }
 
 input::placeholder,
@@ -181,238 +211,194 @@ textarea::placeholder {
   color: var(--gray-400);
 }
 
+/* ─────────────────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--gray-300);
-  border-radius: 4px;
+  background: var(--gray-300);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--gray-100);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--gray-400);
+  background: var(--gray-400);
 }
 
+/* ─────────────────────────────────────────────────────────
+   SELECTION
+───────────────────────────────────────────────────────── */
 ::selection {
-  background-color: var(--blue-100);
+  background-color: var(--primary-200);
   color: var(--gray-900);
 }
-/* ─────────────────────────────────────────────────────────
-   PREMIUM PANEL FRAMING (Investor polish)
-   Drop-in layer — do not replace base styles
-───────────────────────────────────────────────────────── */
 
-.panel-surface {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.92),
-    rgba(249, 250, 251, 0.92)
-  );
+/* ─────────────────────────────────────────────────────────
+   GLASSMORPHISM EFFECTS
+───────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ─────────────────────────────────────────────────────────
+   MODERN CARD STYLES
+───────────────────────────────────────────────────────── */
+.card {
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-paper);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
 }
 
-.gold-frame {
-  position: relative;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(184, 155, 94, 0.55); /* brand gold */
-  box-shadow:
-    0 0 0 1px rgba(184, 155, 94, 0.15) inset,
-    0 18px 48px rgba(0, 0, 0, 0.12);
-}
-
-.gold-frame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: var(--radius-lg);
-  background: radial-gradient(
-    900px 260px at 30% 0%,
-    rgba(184, 155, 94, 0.12),
-    transparent 60%
-  );
-}
-
-/* ─────────────────────────────────────────────────────────
-   BUTTON MICRO-INTERACTIONS (fast + intentional)
-───────────────────────────────────────────────────────── */
-
-button {
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast),
-    filter var(--transition-fast);
-}
-
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
+.card:hover {
   box-shadow: var(--shadow-lg);
-  filter: brightness(1.03);
+  transform: translateY(-2px);
 }
 
-button:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+.card-gradient {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
 }
-body { outline: 6px solid magenta; }
+
 /* ─────────────────────────────────────────────────────────
-   SIDEBAR NAV: hover + active (premium micro-interactions)
+   ANIMATIONS
 ───────────────────────────────────────────────────────── */
-
-/* generic: works for <a> or <button> inside an <aside> sidebar */
-aside a,
-aside button {
-  display: block;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin: 2px 6px;
-  color: var(--gray-900);
-  text-decoration: none;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* hover pop */
-aside a:hover,
-aside button:hover {
-  transform: translateY(-1px);
-  background: rgba(184, 155, 94, 0.10);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10);
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-/* active/selected (keep your existing blue highlight, add a gold edge) */
-aside a[aria-current='page'],
-aside a.active,
-aside button[aria-current='page'],
-aside button.active {
-  box-shadow: inset 2px 0 0 rgba(184, 155, 94, 0.85);
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
 /* ─────────────────────────────────────────────────────────
-   SIDEBAR NAV — gold outline (final polish)
+   RESPONSIVE UTILITIES
 ───────────────────────────────────────────────────────── */
-
-aside a,
-aside button {
-  position: relative;
-  outline: 0;
+@media (max-width: 768px) {
+  :root {
+    --topbar-height: 56px;
+    --sidebar-width: 0;
+  }
 }
 
-/* gold outline on hover */
-aside a:hover,
-aside button:hover {
-  outline: 1px solid rgba(184, 155, 94, 0.45);
-  outline-offset: -1px;
-}
-
-/* stronger gold outline when active/selected */
-aside a[aria-current='page'],
-aside a.active,
-aside button[aria-current='page'],
-aside button.active {
-  outline: 1px solid rgba(184, 155, 94, 0.75);
-  outline-offset: -1px;
-  background: rgba(184, 155, 94, 0.08);
-}
 /* ─────────────────────────────────────────────────────────
-   LETTER PREVIEW WATERMARK (Document Body Only)
+   PRINT STYLES
 ───────────────────────────────────────────────────────── */
-
-.watermark-root {
-  position: relative;
-}
-
-.watermark-root::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('/watermarks/g3-logo-watermark.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 420px;
-  opacity: 0.045;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* keep letter text above watermark */
-.watermark-root > * {
-  position: relative;
-  z-index: 1;
-}
-/* =========================
-   PDF / Print Export
-   ========================= */
-
-.no-print {
-  /* On screen: visible. Print: hidden */
-}
-
 @media print {
-  /* Use full page and kill app chrome */
   html, body {
     height: auto !important;
     overflow: visible !important;
     background: #fff !important;
   }
 
-  /* Hide anything marked no-print */
   .no-print {
     display: none !important;
   }
 
-  /* Hide Next.js / layout chrome common offenders */
   header, nav, footer {
     display: none !important;
   }
 
-  /* Make sure preview prints as a clean page */
   .print-letter-root {
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  /* This is the actual printable letter area */
   .print-letter {
     position: relative;
     background: #fff !important;
     color: #000 !important;
     box-shadow: none !important;
     border: none !important;
-
-    /* Helps prevent clipped content */
     overflow: visible !important;
-
-    /* Give the PDF a nice margin */
     padding: 0.75in !important;
   }
 
-  /* Watermark overlay (PRINT ONLY) */
   .print-letter::before {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
-    opacity: 0.08; /* small, subtle */
-
-    /* Use your existing asset */
+    opacity: 0.08;
     background-image: url('/watermarks/fast-form-filing-watermark.png');
     background-repeat: no-repeat;
     background-position: center;
     background-size: 60% auto;
   }
 
-  /* Optional: ensure colors/opacity print reliably */
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* Optional: page settings */
   @page {
     margin: 0;
   }
 }
-

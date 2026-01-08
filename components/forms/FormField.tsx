@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { Box, Typography, FormHelperText } from '@mui/material';
 
 interface FormFieldProps {
   label: string;
@@ -18,44 +21,56 @@ export function FormField({
   children,
 }: FormFieldProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 0.75, sm: 1 } }}>
       {/* Label row */}
-      <div
-        style={{
+      <Box
+        sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1,
         }}
       >
-        <label
+        <Typography
+          component="label"
           htmlFor={htmlFor}
-          style={{
-            fontSize: '13px',
+          sx={{
+            fontSize: { xs: '0.8125rem', sm: '0.875rem' },
             fontWeight: 500,
-            color: 'var(--gray-700)',
+            color: error ? 'error.main' : 'text.primary',
+            cursor: 'pointer',
           }}
         >
           {label}
           {required && (
-            <span style={{ color: 'var(--red-600)', marginLeft: '2px' }}>*</span>
+            <Typography component="span" sx={{ color: 'error.main', ml: 0.5 }}>
+              *
+            </Typography>
           )}
-        </label>
+        </Typography>
         {hint && (
-          <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+              color: 'text.secondary',
+            }}
+          >
             {hint}
-          </span>
+          </Typography>
         )}
-      </div>
+      </Box>
 
       {/* Input */}
       {children}
 
       {/* Error message */}
       {error && (
-        <span style={{ fontSize: '12px', color: 'var(--red-600)' }}>
+        <FormHelperText error sx={{ fontSize: { xs: '0.75rem', sm: '0.8125rem' }, m: 0 }}>
           {error}
-        </span>
+        </FormHelperText>
       )}
-    </div>
+    </Box>
   );
 }

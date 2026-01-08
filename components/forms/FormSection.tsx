@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { Box, Typography, Divider } from '@mui/material';
 
 interface FormSectionProps {
   title: string;
@@ -8,48 +11,51 @@ interface FormSectionProps {
 
 export function FormSection({ title, description, children }: FormSectionProps) {
   return (
-    <div
-      style={{
-        paddingBottom: '24px',
-        marginBottom: '24px',
-        borderBottom: '1px solid var(--gray-200)',
+    <Box
+      sx={{
+        pb: { xs: 3, sm: 4 },
+        mb: { xs: 3, sm: 4 },
+        borderBottom: 1,
+        borderColor: 'divider',
       }}
     >
       {/* Section header */}
-      <div style={{ marginBottom: '20px' }}>
-        <h3
-          style={{
-            fontSize: '15px',
+      <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontSize: { xs: '1rem', sm: '1.125rem' },
             fontWeight: 600,
-            color: 'var(--gray-900)',
-            marginBottom: '4px',
+            color: 'text.primary',
+            mb: description ? 0.5 : 0,
           }}
         >
           {title}
-        </h3>
+        </Typography>
         {description && (
-          <p
-            style={{
-              fontSize: '13px',
-              color: 'var(--gray-500)',
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+              color: 'text.secondary',
               lineHeight: 1.5,
             }}
           >
             {description}
-          </p>
+          </Typography>
         )}
-      </div>
+      </Box>
 
       {/* Section content */}
-      <div
-        style={{
+      <Box
+        sx={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: { xs: 2, sm: 2.5 },
         }}
       >
         {children}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

@@ -225,23 +225,11 @@ export default function CP2000Page() {
   return (
     <AuthGuard>
       <SplitView>
-        <FormPanel title="TAC Emergency IRS Responder" subtitle="Deterministic IRS Notice Response Engine">
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '6px 12px',
-            backgroundColor: 'var(--gray-900)',
-            color: '#ffffff',
-            fontSize: 'var(--text-xs)',
-            fontWeight: 600,
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '24px',
-            letterSpacing: '0.025em',
-          }}
+        <FormPanel 
+          title="TAC Emergency IRS Responder" 
+          subtitle="Deterministic IRS Notice Response Engine"
+          noticeBadge="CP2000 — Underreporter Inquiry"
         >
-          CP2000 — Underreporter Inquiry
-        </div>
 
         <FormSection
           title="Taxpayer Information"

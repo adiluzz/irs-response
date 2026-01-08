@@ -1,14 +1,27 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Input } from '@/components/forms/Input';
-import { FormField } from '@/components/forms/FormField';
-import { Button } from '@/components/ui/Button';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  Link as MuiLink,
+  IconButton,
+  InputAdornment,
+  Card,
+  CardContent,
+  CircularProgress,
+} from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
-export function LoginForm() {
+function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -53,223 +66,191 @@ export function LoginForm() {
   };
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'var(--gray-50)',
-        padding: 'var(--space-4)',
+        background: (theme) =>
+          `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+        p: 3,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '440px',
-          backgroundColor: '#ffffff',
-          border: '1px solid var(--gray-200)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--space-8)',
-          boxShadow: 'var(--shadow-paper)',
+      {/* Background Pattern */}
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.1,
+          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+          backgroundSize: '40px 40px',
         }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            marginBottom: 'var(--space-8)',
-            textAlign: 'center',
+      />
+
+      <Container maxWidth="sm">
+        <Card
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            borderRadius: 4,
+            boxShadow: 8,
           }}
         >
-          <h1
-            style={{
-              fontSize: 'var(--text-3xl)',
-              fontWeight: 700,
-              color: 'var(--gray-900)',
-              marginBottom: 'var(--space-2)',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Sign In
-          </h1>
-          <p
-            style={{
-              fontSize: 'var(--text-md)',
-              color: 'var(--gray-500)',
-              lineHeight: 'var(--leading-relaxed)',
-            }}
-          >
-            Sign in to your account to continue
-          </p>
-        </div>
+          <CardContent sx={{ p: { xs: 4, sm: 6 } }}>
+            {/* Header */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 2,
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 2,
+                  boxShadow: 4,
+                }}
+              >
+                <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
+                  TAC
+                </Typography>
+              </Box>
+              <Typography variant="h4" gutterBottom fontWeight={800}>
+                Welcome Back
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Sign in to your account to continue
+              </Typography>
+            </Box>
 
-        {/* Success message */}
-        {verified && (
-          <div
-            style={{
-              marginBottom: 'var(--space-6)',
-              padding: 'var(--space-4)',
-              backgroundColor: 'var(--green-50)',
-              border: '1px solid var(--green-600)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)',
-              color: 'var(--green-600)',
-            }}
-          >
-            Email verified successfully! You can now login.
-          </div>
-        )}
+            {/* Success message */}
+            {verified && (
+              <Alert severity="success" sx={{ mb: 3 }}>
+                Email verified successfully! You can now login.
+              </Alert>
+            )}
 
-        {/* Error message */}
-        {error && (
-          <div
-            style={{
-              marginBottom: 'var(--space-6)',
-              padding: 'var(--space-4)',
-              backgroundColor: 'var(--red-50)',
-              border: '1px solid var(--red-600)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)',
-              color: 'var(--red-600)',
-            }}
-          >
-            {error}
-          </div>
-        )}
+            {/* Error message */}
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-            <FormField label="Email Address" htmlFor="email" required>
-              <Input
-                id="email"
+            {/* Form */}
+            <Box component="form" onSubmit={handleSubmit}>
+              <TextField
+                fullWidth
+                label="Email Address"
                 type="email"
                 name="email"
-                autoComplete="email"
-                autoFocus
+                id="email"
+                data-testid="login-email"
+                inputProps={{ 'data-testid': 'login-email-input' }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
                 disabled={loading}
-                hasError={!!error}
-                placeholder="Enter your email"
+                autoFocus
+                autoComplete="email"
+                margin="normal"
               />
-            </FormField>
 
-            <FormField label="Password" htmlFor="password" required>
-              <div style={{ position: 'relative' }}>
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  hasError={!!error}
-                  placeholder="Enter your password"
-                  style={{ paddingRight: '40px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    color: 'var(--gray-500)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--gray-700)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'var(--gray-500)';
-                  }}
+              <TextField
+                fullWidth
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                id="password"
+                data-testid="login-password"
+                inputProps={{ 'data-testid': 'login-password-input' }}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                autoComplete="current-password"
+                margin="normal"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        disabled={loading}
+                      >
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+                <MuiLink
+                  component={Link}
+                  href="/auth/forgot-password"
+                  variant="body2"
+                  sx={{ textDecoration: 'none' }}
                 >
-                  {showPassword ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </FormField>
+                  Forgot password?
+                </MuiLink>
+              </Box>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Link
-                href="/auth/forgot-password"
-                style={{
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--blue-600)',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                data-testid="login-submit"
+                sx={{ mb: 2, py: 1.5 }}
               >
-                Forgot password?
-              </Link>
-            </div>
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
 
-            <Button
-              type="submit"
-              fullWidth
-              size="lg"
-              disabled={loading}
-              style={{
-                marginTop: 'var(--space-2)',
-              }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Don't have an account?{' '}
+                  <MuiLink
+                    component={Link}
+                    href="/auth/signup"
+                    sx={{ textDecoration: 'none', fontWeight: 600 }}
+                  >
+                    Sign up
+                  </MuiLink>
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
+  );
+}
 
-            <div style={{ textAlign: 'center', marginTop: 'var(--space-4)' }}>
-              <p
-                style={{
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--gray-500)',
-                  margin: 0,
-                }}
-              >
-                Don't have an account?{' '}
-                <Link
-                  href="/auth/signup"
-                  style={{
-                    color: 'var(--blue-600)',
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.textDecoration = 'underline';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.textDecoration = 'none';
-                  }}
-                >
-                  Sign up
-                </Link>
-              </p>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+export function LoginForm() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }

@@ -35,7 +35,18 @@ export async function middleware(request: NextRequest) {
   // Protect all other pages (require authentication)
   // This includes: /, /notice, /notice/*, etc.
   if (!token) {
-    const loginUrl = new URL('/auth/login', request.url);
+    // Get base URL from environment or request
+    const baseUrl = process.env.NEXTAUTH_URL || 
+                    process.env.NEXT_PUBLIC_APP_URL ||
+                    (process.env.NODE_ENV === 'production' ? 'https://viseething.com' : 'http://localhost:3001');
+    
+    // Use host header if available and not localhost
+    const host = request.headers.get('host');
+    const finalBaseUrl = (host && !host.includes('localhost')) 
+      ? `${request.headers.get('x-forwarded-proto') || 'https'}://${host}`
+      : baseUrl;
+    
+    const loginUrl = new URL('/auth/login', finalBaseUrl);
     loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
   }

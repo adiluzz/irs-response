@@ -349,23 +349,8 @@ export default function CP504Page() {
       <FormPanel
         title="TAC Emergency IRS Responder"
         subtitle="Deterministic IRS Notice Response Engine"
+        noticeBadge="CP504 — Final Notice Before Levy"
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '6px 12px',
-            backgroundColor: 'var(--gray-900)',
-            color: '#ffffff',
-            fontSize: 'var(--text-xs)',
-            fontWeight: 600,
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '24px',
-            letterSpacing: '0.025em',
-          }}
-        >
-          CP504 — Final Notice Before Levy
-        </div>
 
         <FormSection
           title="Response Context"

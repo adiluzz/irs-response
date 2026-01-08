@@ -1,12 +1,11 @@
-import { AuthGuard } from '@/components/auth/AuthGuard';
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const HomePage = dynamic(() => import('@/components/pages/HomePage').then(mod => ({ default: mod.HomePage })), {
+  ssr: false,
+});
 
 export default function Page() {
-  return (
-    <AuthGuard>
-      <main style={{ padding: 24 }}>
-        <h1>TAC Response</h1>
-        <p>Scaffold build OK.</p>
-      </main>
-    </AuthGuard>
-  );
+  return <HomePage />;
 }

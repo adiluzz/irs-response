@@ -11,7 +11,11 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendVerificationEmail(email: string, token: string, name?: string) {
-  const verificationUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify-email?token=${token}`;
+  // Get base URL from environment, with fallback
+  const baseUrl = process.env.NEXTAUTH_URL || 
+                  process.env.NEXT_PUBLIC_APP_URL || 
+                  (process.env.NODE_ENV === 'production' ? 'https://viseething.com' : 'http://localhost:3001');
+  const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
   
   const mailOptions = {
     from: `"${process.env.EMAIL_FROM_NAME || 'Tax Letters System'}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
@@ -49,7 +53,11 @@ export async function sendVerificationEmail(email: string, token: string, name?:
 }
 
 export async function sendPasswordResetEmail(email: string, token: string, name?: string) {
-  const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
+  // Get base URL from environment, with fallback
+  const baseUrl = process.env.NEXTAUTH_URL || 
+                  process.env.NEXT_PUBLIC_APP_URL || 
+                  (process.env.NODE_ENV === 'production' ? 'https://viseething.com' : 'http://localhost:3001');
+  const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
   
   const mailOptions = {
     from: `"${process.env.EMAIL_FROM_NAME || 'Tax Letters System'}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,

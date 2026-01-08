@@ -1,85 +1,177 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Typography,
+  Box,
+  Divider,
+} from '@mui/material';
 import { navigation } from '@/lib/constants/navigation';
-import { NavItem } from '@/components/ui/NavItem';
+import Link from 'next/link';
 
-export function Sidebar() {
+interface SidebarProps {
+  isMobile?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const drawerWidth = 280;
+
+export function Sidebar({ isMobile = false, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [isMobileView, setIsMobileView] = useState(false);
 
-  return (
-    <aside
-      style={{
-        position: 'fixed',
-        top: 'var(--topbar-height)',
-        left: 0,
-        bottom: 0,
-        width: 'var(--sidebar-width)',
-        backgroundColor: '#ffffff',
-        borderRight: '1px solid var(--gray-200)',
-        overflowY: 'auto',
-        padding: '16px 12px',
-        zIndex: 50,
-      }}
-    >
-      {/* Navigation categories */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {navigation.map((category) => (
-          <div key={category.id}>
-            {/* Category title */}
-            <h3
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: 'var(--gray-500)',
-                padding: '0 12px',
-                marginBottom: '8px',
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 960); // md breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const drawerContent = (
+    <Box sx={{ width: drawerWidth, height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ p: 3, flexGrow: 1 }}>
+        {navigation.map((category, categoryIndex) => (
+          <Box key={category.id} sx={{ mb: categoryIndex < navigation.length - 1 ? 4 : 0 }}>
+            {/* Category Title */}
+            <Typography
+              variant="overline"
+              sx={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                color: 'text.secondary',
+                letterSpacing: '0.1em',
+                px: 1.5,
+                mb: 1,
+                display: 'block',
               }}
             >
               {category.title}
-            </h3>
+            </Typography>
 
-            {/* Nav items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {category.items.map((item) => (
-                <NavItem
-                  key={item.id}
-                  label={item.label}
-                  href={item.href}
-                  status={item.status}
-                  isActive={item.href === pathname}
-                />
-              ))}
-            </div>
-          </div>
+            {/* Nav Items */}
+            <List disablePadding>
+              {category.items.map((item) => {
+                const isActive = item.href === pathname;
+                const isClickable = item.status === 'available' || item.status === 'active';
+
+                return (
+                  <ListItem key={item.id} disablePadding>
+                    <ListItemButton
+                      component={isClickable ? Link : 'div'}
+                      href={isClickable ? item.href : undefined}
+                      onClick={isMobile && isClickable ? onClose : undefined}
+                      disabled={!isClickable}
+                      selected={isActive}
+                      sx={{
+                        borderRadius: 2,
+                        mx: 0.75,
+                        mb: 0.25,
+                        '&.Mui-selected': {
+                          backgroundColor: 'primary.main',
+                          color: 'primary.contrastText',
+                          '&:hover': {
+                            backgroundColor: 'primary.dark',
+                          },
+                        },
+                        '&:hover': {
+                          backgroundColor: isActive ? 'primary.dark' : 'action.hover',
+                        },
+                      }}
+                    >
+                      <ListItemText
+                        primary={item.label}
+                        secondary={
+                          item.status === 'coming-soon' ? (
+                            <Typography variant="caption" sx={{ fontSize: '0.625rem' }}>
+                              Soon
+                            </Typography>
+                          ) : item.status === 'disabled' ? (
+                            <Typography variant="caption" sx={{ fontSize: '0.625rem' }}>
+                              N/A
+                            </Typography>
+                          ) : null
+                        }
+                        primaryTypographyProps={{
+                          fontSize: '0.875rem',
+                          fontWeight: isActive ? 600 : 500,
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Box>
         ))}
-      </nav>
+      </Box>
 
-      {/* Footer area */}
-      <div
-        style={{
-          marginTop: '32px',
-          padding: '16px 12px',
-          borderTop: '1px solid var(--gray-200)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: '12px',
-            color: 'var(--gray-500)',
-            lineHeight: 1.6,
+      {/* Footer */}
+      <Box sx={{ mt: 'auto', p: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            background: (theme) =>
+              `linear-gradient(135deg, ${theme.palette.primary.light}15 0%, ${theme.palette.primary.main}15 100%)`,
           }}
         >
-          <strong style={{ color: 'var(--gray-700)', fontWeight: 600 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
             Need help?
-          </strong>
-          <br />
-          Access documentation and support resources.
-        </div>
-      </div>
-    </aside>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Access documentation and support resources.
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+
+  if (isMobileView) {
+    return (
+      <Drawer
+        variant="temporary"
+        open={isOpen}
+        onClose={onClose}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+    );
+  }
+
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        display: { xs: 'none', md: 'block' },
+        '& .MuiDrawer-paper': {
+          boxSizing: 'border-box',
+          width: drawerWidth,
+          top: 64, // AppBar height
+        },
+      }}
+      open
+    >
+      {drawerContent}
+    </Drawer>
   );
 }

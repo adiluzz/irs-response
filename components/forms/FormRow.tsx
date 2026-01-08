@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { Box } from '@mui/material';
 
 interface FormRowProps {
   columns?: 1 | 2 | 3;
@@ -7,14 +10,18 @@ interface FormRowProps {
 
 export function FormRow({ columns = 2, children }: FormRowProps) {
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${columns}, 1fr)`,
-        gap: '16px',
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: columns === 1 ? '1fr' : columns === 2 ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+          md: `repeat(${columns}, 1fr)`,
+        },
+        gap: { xs: 2, sm: 2.5 },
       }}
     >
       {children}
-    </div>
+    </Box>
   );
 }
