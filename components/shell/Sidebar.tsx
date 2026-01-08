@@ -38,7 +38,11 @@ export function Sidebar({ isMobile = false, isOpen = false, onClose }: SidebarPr
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth, height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ p: 3, flexGrow: 1 }}>
+      <Box sx={{ 
+        p: 3, 
+        flexGrow: 1,
+        pt: isMobileView ? { xs: 5, sm: 3 } : 3, // Add top padding on mobile to account for TopBar
+      }}>
         {navigation.map((category, categoryIndex) => (
           <Box key={category.id} sx={{ mb: categoryIndex < navigation.length - 1 ? 4 : 0 }}>
             {/* Category Title */}
@@ -146,11 +150,11 @@ export function Sidebar({ isMobile = false, isOpen = false, onClose }: SidebarPr
         }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          zIndex: (theme) => theme.zIndex.drawer,
+          zIndex: (theme) => theme.zIndex.drawer + 2,
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            zIndex: (theme) => theme.zIndex.drawer,
+            zIndex: (theme) => theme.zIndex.drawer + 2,
           },
         }}
       >
