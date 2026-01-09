@@ -15,7 +15,8 @@ import { FormPanel } from '@/components/layout/FormPanel';
 import { SplitView } from '@/components/layout/SplitView';
 import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel';
 import { Button } from '@/components/ui/Button';
-import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
+import { type LetterContext } from '@/lib/letters';
+import { useDocumentGeneration } from '@/lib/hooks/useDocumentGeneration';
 import React, { useCallback, useRef, useState } from 'react';
 
 function formatSSN(value: string): string {
@@ -72,9 +73,17 @@ export default function CP2000Page() {
 
   const [includeReferences, setIncludeReferences] = useState(false);
 
-  const [generatedOutput, setGeneratedOutput] = useState('');
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const {
+    generatedOutput,
+    hasGenerated,
+    validationError,
+    documentId,
+    pdfUrl,
+    isGenerating,
+    generateDocument,
+    clearDocument: clearGeneratedDocument,
+    setValidationError,
+  } = useDocumentGeneration();
   // Preview scroll container ref (used to force scrollTop=0 after generation)
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -85,11 +94,10 @@ export default function CP2000Page() {
         [e.target.name]: e.target.value,
       }));
       if (hasGenerated) {
-        setHasGenerated(false);
-        setGeneratedOutput('');
+        clearGeneratedDocument();
       }
     },
-    [hasGenerated]
+    [hasGenerated, clearGeneratedDocument]
   );
 
   const handleClear = useCallback(() => {
@@ -106,12 +114,10 @@ export default function CP2000Page() {
       explanation: '',
     });
     setIncludeReferences(false);
-    setGeneratedOutput('');
-    setHasGenerated(false);
-    setValidationError('');
-  }, []);
+    clearGeneratedDocument();
+  }, [clearGeneratedDocument]);
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     setValidationError('');
 
     const missingFields: string[] = [];
@@ -127,7 +133,6 @@ export default function CP2000Page() {
       return;
     }
 
-    // ✅ FIXED: remove bogus formData.differenceType usage (does not exist)
     const discrepancyLine = formData.discrepancyType
       ? `Discrepancy Type: ${getDiscrepancyLabel(formData.discrepancyType)}`
       : '';
@@ -154,29 +159,18 @@ export default function CP2000Page() {
         discrepancyType: formData.discrepancyType || '',
         explanation: explanationCombined || '',
         position: formData.responsePosition || '',
-        includeReferences, // ✅ single source of truth
+        includeReferences,
       };
 
-      const blueprint = getBlueprint(ctx.noticeType);
-      const letterData = blueprint.build(ctx);
-
-      // ✅ DO NOT append/move/remove "References" here. Engine owns ordering.
-      const result = composeLetter({
-        ...letterData,
-        todayISO: new Date().toISOString().split('T')[0],
+      await generateDocument({
+        noticeType: 'CP2000',
+        letterContext: ctx,
         includeReferences,
       });
-
-      const letterBody = extractLetterBody(result);
-      setGeneratedOutput(letterBody);
-      setHasGenerated(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Generation failed.';
-      setGeneratedOutput('');
-      setHasGenerated(false);
-      setValidationError(msg);
+      // Error is handled by the hook
     }
-  }, [formData, includeReferences]);
+  }, [formData, includeReferences, generateDocument, setValidationError]);
 
 
   const canGenerate = Boolean(
@@ -399,8 +393,8 @@ export default function CP2000Page() {
               <Button variant="secondary" type="button" disabled>
                 Save Draft
               </Button>
-              <Button variant="primary" type="button" disabled={!canGenerate} onClick={handleGenerate}>
-                Generate Letter
+              <Button variant="primary" type="button" disabled={!canGenerate || isGenerating} onClick={handleGenerate}>
+                {isGenerating ? 'Generating...' : 'Generate Letter'}
               </Button>
             </div>
           </div>
@@ -412,6 +406,9 @@ export default function CP2000Page() {
         noticeType="CP2000"
         useLetterPreview={true}
         previewScrollRef={previewScrollRef}
+        documentId={documentId}
+        pdfUrl={pdfUrl}
+        isGenerating={isGenerating}
       />
     </SplitView>
     </AuthGuard>

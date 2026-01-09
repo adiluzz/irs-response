@@ -14,6 +14,9 @@ interface NoticePreviewPanelProps {
   isPaid?: boolean;
   useLetterPreview?: boolean; // If true, uses LetterPreview component instead of pre tag
   previewScrollRef?: React.RefObject<HTMLDivElement | null>;
+  documentId?: string | null; // Document ID for PDF download
+  isGenerating?: boolean; // Loading state
+  pdfUrl?: string | null; // URL to display PDF in preview
 }
 
 export function NoticePreviewPanel({
@@ -23,6 +26,9 @@ export function NoticePreviewPanel({
   isPaid = false,
   useLetterPreview = false,
   previewScrollRef: externalRef,
+  documentId = null,
+  isGenerating = false,
+  pdfUrl = null,
 }: NoticePreviewPanelProps) {
   const hasGenerated = Boolean(generatedOutput);
   const [copyState, setCopyState] = useState<CopyState>('idle');
@@ -39,6 +45,7 @@ export function NoticePreviewPanel({
   const handleCopy = useCallback(async () => {
     if (!generatedOutput) return;
     try {
+      // Copy the text content (letter text)
       await navigator.clipboard.writeText(generatedOutput);
       setCopyState('copied');
       setTimeout(() => setCopyState('idle'), 2000);
@@ -47,7 +54,31 @@ export function NoticePreviewPanel({
     }
   }, [generatedOutput]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
+    // Prioritize PDF download if pdfUrl or documentId is available
+    if (pdfUrl || documentId) {
+      try {
+        const downloadId = documentId || pdfUrl?.split('/').pop();
+        if (downloadId) {
+          const { getDocumentPDF } = await import('@/lib/api/documents');
+          const pdfBlob = await getDocumentPDF(downloadId);
+          const url = URL.createObjectURL(pdfBlob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `tac-letter-${noticeType || 'response'}-${Date.now()}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to download PDF:', error);
+        // Fall through to text download fallback
+      }
+    }
+
+    // Fallback to text download if no PDF available
     if (!generatedOutput) return;
     const blob = new Blob([generatedOutput], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -58,7 +89,7 @@ export function NoticePreviewPanel({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, [generatedOutput, noticeType]);
+  }, [documentId, pdfUrl, generatedOutput, noticeType]);
 
   const handlePdf = useCallback(() => {
     if (!generatedOutput) return;
@@ -283,7 +314,34 @@ pre {
             )}
 
             {/* Content */}
-            {useLetterPreview ? (
+            {pdfUrl ? (
+              <Box
+                sx={{
+                  position: 'relative',
+                  zIndex: 1,
+                  width: '100%',
+                  height: '100%',
+                  minHeight: { xs: '400px', sm: '500px', md: '600px' },
+                  border: 'none',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <iframe
+                  src={pdfUrl}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    flex: 1,
+                    minHeight: '400px',
+                  }}
+                  title="PDF Preview"
+                  allow="fullscreen"
+                />
+              </Box>
+            ) : useLetterPreview ? (
               <Box sx={{ position: 'relative', zIndex: 1 }}>
                 <LetterPreview noticeType={noticeType || ''} content={generatedOutput} />
               </Box>

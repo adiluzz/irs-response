@@ -14,7 +14,8 @@ import { FormPanel } from '@/components/layout/FormPanel';
 import { SplitView } from '@/components/layout/SplitView';
 import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel';
 import { Button } from '@/components/ui/Button';
-import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters';
+import { type LetterContext } from '@/lib/letters';
+import { useDocumentGeneration } from '@/lib/hooks/useDocumentGeneration';
 import React, { useCallback, useState } from 'react';
 
 export default function CP501Page() {
@@ -30,9 +31,17 @@ export default function CP501Page() {
     explanation: '',
   });
 
-  const [generatedOutput, setGeneratedOutput] = useState('');
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const {
+    generatedOutput,
+    hasGenerated,
+    validationError,
+    documentId,
+    pdfUrl,
+    isGenerating,
+    generateDocument,
+    clearDocument: clearGeneratedDocument,
+    setValidationError,
+  } = useDocumentGeneration();
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -41,11 +50,10 @@ export default function CP501Page() {
         [e.target.name]: e.target.value,
       }));
       if (hasGenerated) {
-        setHasGenerated(false);
-        setGeneratedOutput('');
+        clearGeneratedDocument();
       }
     },
-    [hasGenerated]
+    [hasGenerated, clearGeneratedDocument]
   );
 
   const handleClear = useCallback(() => {
@@ -60,12 +68,10 @@ export default function CP501Page() {
       priorPayments: '',
       explanation: '',
     });
-    setGeneratedOutput('');
-    setHasGenerated(false);
-    setValidationError('');
-  }, []);
+    clearGeneratedDocument();
+  }, [clearGeneratedDocument]);
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     setValidationError('');
 
     const missingFields: string[] = [];
@@ -89,40 +95,21 @@ export default function CP501Page() {
         noticeDate: formData.noticeDate,
         taxYear: formData.taxYear,
         amount: formData.balanceDue,
-        // CP501 UI currently does not capture a due-date/deadline field; keep deterministic placeholder.
         deadline: '',
-        // CP501 UI does not capture a disputeReason field; map to a stable default.
         position: 'dispute',
         explanation: formData.explanation || '',
         priorActions: formData.priorPayments || '',
       };
 
-      const blueprint = getBlueprint(ctx.noticeType);
-      const letterData = blueprint.build(ctx);
-
-      const result = composeLetter({
-        ...letterData,
-        todayISO: new Date().toISOString().split('T')[0],
+      await generateDocument({
+        noticeType: 'CP501',
+        letterContext: ctx,
+        includeReferences: false,
       });
-
-      const letterBody =
-        typeof result === 'string'
-          ? result
-          : result && typeof result === 'object' && 'letterBody' in result
-            ? typeof (result as { letterBody?: unknown }).letterBody === 'string'
-              ? ((result as { letterBody?: unknown }).letterBody as string)
-              : ''
-            : '';
-
-      setGeneratedOutput(letterBody);
-      setHasGenerated(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Generation failed.';
-      setGeneratedOutput('');
-      setHasGenerated(false);
-      setValidationError(msg);
+      // Error is handled by the hook
     }
-  }, [formData]);
+  }, [formData, generateDocument, setValidationError]);
 
 
   const canGenerate = Boolean(
@@ -301,6 +288,9 @@ export default function CP501Page() {
       <NoticePreviewPanel
         generatedOutput={generatedOutput}
         noticeType="CP501"
+        documentId={documentId}
+        pdfUrl={pdfUrl}
+        isGenerating={isGenerating}
       />
     </SplitView>
     </AuthGuard>

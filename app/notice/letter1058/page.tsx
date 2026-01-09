@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/Button'
 import React, { useCallback, useMemo, useState } from 'react'
 
 // SWITCH: stop using legacy generator router, use the new letter engine
-import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
-import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
+import { type LetterContext } from '@/lib/letters'
+import { useDocumentGeneration } from '@/lib/hooks/useDocumentGeneration'
 
 
 // Align to your engine patterns used in CP14/CP504 pages
@@ -170,9 +170,18 @@ export default function Letter1058Page() {
     useState<ResponsePosition>('dispute')
 
   const [includeReferences, setIncludeReferences] = useState(false)
-  const [generatedOutput, setGeneratedOutput] = useState('')
-  const [hasGenerated, setHasGenerated] = useState(false)
-  const [validationError, setValidationError] = useState('')
+  
+  const {
+    generatedOutput,
+    hasGenerated,
+    validationError,
+    documentId,
+    pdfUrl,
+    isGenerating,
+    generateDocument,
+    clearDocument: clearGeneratedDocument,
+    setValidationError,
+  } = useDocumentGeneration()
 
   const handleChange = useCallback(
     (
@@ -192,11 +201,10 @@ export default function Letter1058Page() {
       }
 
       if (hasGenerated) {
-        setHasGenerated(false)
-        setGeneratedOutput('')
+        clearGeneratedDocument()
       }
     },
-    [hasGenerated]
+    [hasGenerated, clearGeneratedDocument]
   )
 
   const handleClear = useCallback(() => {
@@ -214,12 +222,10 @@ export default function Letter1058Page() {
     setBalanceDueReason('unknown')
     setResponsePosition('dispute')
     setIncludeReferences(false)
-    setGeneratedOutput('')
-    setHasGenerated(false)
-    setValidationError('')
-  }, [])
+    clearGeneratedDocument()
+  }, [clearGeneratedDocument])
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     setValidationError('')
 
     const missing: string[] = []
@@ -243,7 +249,7 @@ export default function Letter1058Page() {
       .filter(Boolean)
       .join('\n\n')
 
-    // Give the engine “meat” (same technique as CP504 fix)
+    // Give the engine "meat" (same technique as CP504 fix)
     const positionNarrative = [
       `Response Position: ${responsePositionLabels[responsePosition]}`,
       `Balance Due Reason: ${balanceDueReasonLabels[balanceDueReason]}`,
@@ -272,33 +278,14 @@ export default function Letter1058Page() {
         appendReferences: includeReferences ? 'true' : 'false',
       }
 
-      const blueprint = getBlueprint(ctx.noticeType)
-      const letterData = blueprint.build(ctx)
-
-      // Append references when checkbox is checked.
-      const sections = includeReferences
-        ? [
-            ...letterData.sections,
-            {
-              heading: 'References',
-              body: generateEducationalReferences().trim(),
-            },
-          ]
-        : letterData.sections
-
-      const result = composeLetter({
-        ...letterData,
-        sections,
-        todayISO: new Date().toISOString().split('T')[0],
+      // Call API to create document using reusable hook
+      await generateDocument({
+        noticeType: 'LETTER_1058',
+        letterContext: ctx,
+        includeReferences,
       })
-
-      setGeneratedOutput(result)
-      setHasGenerated(true)
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Generation failed.'
-      setGeneratedOutput('')
-      setHasGenerated(false)
-      setValidationError(msg)
+      // Error is handled by the hook
     }
   }, [
     formData,
@@ -308,6 +295,8 @@ export default function Letter1058Page() {
     discrepancyLabels,
     balanceDueReasonLabels,
     responsePositionLabels,
+    generateDocument,
+    setValidationError,
   ])
 
 
@@ -342,8 +331,7 @@ export default function Letter1058Page() {
                 onChange={(e) => {
                   setBalanceDueReason(e.target.value as BalanceDueReason)
                   if (hasGenerated) {
-                    setHasGenerated(false)
-                    setGeneratedOutput('')
+                    clearGeneratedDocument()
                   }
                 }}
               >
@@ -363,8 +351,7 @@ export default function Letter1058Page() {
                 onChange={(e) => {
                   setResponsePosition(e.target.value as ResponsePosition)
                   if (hasGenerated) {
-                    setHasGenerated(false)
-                    setGeneratedOutput('')
+                    clearGeneratedDocument()
                   }
                 }}
               >
@@ -530,8 +517,7 @@ export default function Letter1058Page() {
               onChange={(e) => {
                 setIncludeReferences(e.target.checked)
                 if (hasGenerated) {
-                  setHasGenerated(false)
-                  setGeneratedOutput('')
+                  clearGeneratedDocument()
                 }
               }}
               style={{
@@ -580,8 +566,8 @@ export default function Letter1058Page() {
               <Button variant="secondary" type="button" disabled>
                 Save Draft
               </Button>
-              <Button variant="primary" type="button" disabled={!canGenerate} onClick={handleGenerate}>
-                Generate Letter
+              <Button variant="primary" type="button" disabled={!canGenerate || isGenerating} onClick={handleGenerate}>
+                {isGenerating ? 'Generating...' : 'Generate Letter'}
               </Button>
             </div>
           </div>
@@ -591,6 +577,9 @@ export default function Letter1058Page() {
       <NoticePreviewPanel
         generatedOutput={generatedOutput}
         noticeType="Letter1058"
+        documentId={documentId}
+        pdfUrl={pdfUrl}
+        isGenerating={isGenerating}
       />
     </SplitView>
     </AuthGuard>

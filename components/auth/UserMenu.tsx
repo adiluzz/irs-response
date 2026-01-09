@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { useState } from 'react';
 
 export function UserMenu() {
@@ -149,6 +150,15 @@ export function UserMenu() {
           </Box>
         </MenuItem>
         <Divider />
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            router.push('/documents');
+          }}
+        >
+          <DescriptionIcon sx={{ mr: 2, fontSize: 20 }} />
+          My Documents
+        </MenuItem>
         <MenuItem onClick={handleLogout}>
           <LogoutIcon sx={{ mr: 2, fontSize: 20 }} />
           Logout

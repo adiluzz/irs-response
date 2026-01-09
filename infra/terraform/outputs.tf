@@ -45,3 +45,13 @@ output "domain_setup_instructions" {
     sudo /opt/setup-ssl.sh
   EOT
 }
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket for document storage"
+  value       = aws_s3_bucket.documents.id
+}
+
+output "s3_bucket_arn" {
+  description = "ARN of the S3 bucket for document storage"
+  value       = aws_s3_bucket.documents.arn
+}

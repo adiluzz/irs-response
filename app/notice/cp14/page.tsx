@@ -20,6 +20,8 @@ import React, { useCallback, useMemo, useState } from 'react'
 // SWITCH: stop using legacy generator router, use the new letter engine
 import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
 import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
+import { useDocumentGeneration } from '@/lib/hooks/useDocumentGeneration'
+import { createDocument } from '@/lib/api/documents'
 
 
 // Align to your engine patterns used in CP14/CP504 pages
@@ -170,9 +172,18 @@ export default function CP503Page() {
     useState<ResponsePosition>('dispute')
 
   const [includeReferences, setIncludeReferences] = useState(false)
-  const [generatedOutput, setGeneratedOutput] = useState('')
-  const [hasGenerated, setHasGenerated] = useState(false)
-  const [validationError, setValidationError] = useState('')
+  
+  const {
+    generatedOutput,
+    hasGenerated,
+    validationError,
+    documentId,
+    pdfUrl,
+    isGenerating,
+    generateDocument,
+    clearDocument: clearGeneratedDocument,
+    setValidationError,
+  } = useDocumentGeneration()
 
   const handleChange = useCallback(
     (
@@ -192,11 +203,10 @@ export default function CP503Page() {
       }
 
       if (hasGenerated) {
-        setHasGenerated(false)
-        setGeneratedOutput('')
+        clearGeneratedDocument()
       }
     },
-    [hasGenerated]
+    [hasGenerated, clearGeneratedDocument]
   )
 
   const handleClear = useCallback(() => {
@@ -214,12 +224,10 @@ export default function CP503Page() {
     setBalanceDueReason('unknown')
     setResponsePosition('dispute')
     setIncludeReferences(false)
-    setGeneratedOutput('')
-    setHasGenerated(false)
-    setValidationError('')
-  }, [])
+    clearGeneratedDocument()
+  }, [clearGeneratedDocument])
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     setValidationError('')
 
     const missing: string[] = []
@@ -254,7 +262,7 @@ export default function CP503Page() {
 
     try {
       const ctx: LetterContext = {
-        noticeType: 'CP503',
+        noticeType: 'CP14',
         family: 'collection_balance_due',
         taxpayerName: formData.taxpayerName,
         taxpayerAddress: formData.taxpayerAddress,
@@ -272,33 +280,14 @@ export default function CP503Page() {
         appendReferences: includeReferences ? 'true' : 'false',
       }
 
-      const blueprint = getBlueprint(ctx.noticeType)
-      const letterData = blueprint.build(ctx)
-
-      // Append references when checkbox is checked.
-      const sections = includeReferences
-        ? [
-            ...letterData.sections,
-            {
-              heading: 'References',
-              body: generateEducationalReferences().trim(),
-            },
-          ]
-        : letterData.sections
-
-      const result = composeLetter({
-        ...letterData,
-        sections,
-        todayISO: new Date().toISOString().split('T')[0],
+      // Call API to create document using reusable hook
+      await generateDocument({
+        noticeType: 'CP14',
+        letterContext: ctx,
+        includeReferences,
       })
-
-      setGeneratedOutput(result)
-      setHasGenerated(true)
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Generation failed.'
-      setGeneratedOutput('')
-      setHasGenerated(false)
-      setValidationError(msg)
+      // Error is handled by the hook
     }
   }, [
     formData,
@@ -308,6 +297,7 @@ export default function CP503Page() {
     discrepancyLabels,
     balanceDueReasonLabels,
     responsePositionLabels,
+    generateDocument,
   ])
 
 
@@ -342,8 +332,7 @@ export default function CP503Page() {
                 onChange={(e) => {
                   setBalanceDueReason(e.target.value as BalanceDueReason)
                   if (hasGenerated) {
-                    setHasGenerated(false)
-                    setGeneratedOutput('')
+                    clearGeneratedDocument()
                   }
                 }}
               >
@@ -363,8 +352,7 @@ export default function CP503Page() {
                 onChange={(e) => {
                   setResponsePosition(e.target.value as ResponsePosition)
                   if (hasGenerated) {
-                    setHasGenerated(false)
-                    setGeneratedOutput('')
+                    clearGeneratedDocument()
                   }
                 }}
               >
@@ -530,8 +518,7 @@ export default function CP503Page() {
               onChange={(e) => {
                 setIncludeReferences(e.target.checked)
                 if (hasGenerated) {
-                  setHasGenerated(false)
-                  setGeneratedOutput('')
+                  clearGeneratedDocument()
                 }
               }}
               style={{
@@ -580,8 +567,8 @@ export default function CP503Page() {
               <Button variant="secondary" type="button" disabled>
                 Save Draft
               </Button>
-              <Button variant="primary" type="button" disabled={!canGenerate} onClick={handleGenerate}>
-                Generate Letter
+              <Button variant="primary" type="button" disabled={!canGenerate || isGenerating} onClick={handleGenerate}>
+                {isGenerating ? 'Generating...' : 'Generate Letter'}
               </Button>
             </div>
           </div>
@@ -591,6 +578,9 @@ export default function CP503Page() {
       <NoticePreviewPanel
         generatedOutput={generatedOutput}
         noticeType="CP14"
+        documentId={documentId}
+        isGenerating={isGenerating}
+        pdfUrl={pdfUrl}
       />
     </SplitView>
     </AuthGuard>
