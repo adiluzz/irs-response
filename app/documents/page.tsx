@@ -3,11 +3,7 @@
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import {
   Box,
-  Button,
   CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Paper,
   Table,
@@ -19,16 +15,14 @@ import {
   Typography,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from 'react';
-import { listDocuments, getDocumentPDF, DocumentListItem } from '@/lib/api/documents';
+import { listDocuments, DocumentListItem } from '@/lib/api/documents';
+import { PDFPreviewDialog } from '@/components/documents/PDFPreviewDialog';
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -46,26 +40,12 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleViewDocument = async (documentId: string) => {
-    try {
-      setPdfLoading(true);
-      setSelectedDocumentId(documentId);
-      const pdfBlob = await getDocumentPDF(documentId);
-      const url = URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
-    } catch (error) {
-      console.error('Failed to load PDF:', error);
-    } finally {
-      setPdfLoading(false);
-    }
+  const handleViewDocument = (documentId: string) => {
+    setSelectedDocumentId(documentId);
   };
 
   const handleCloseDialog = () => {
     setSelectedDocumentId(null);
-    if (pdfUrl) {
-      URL.revokeObjectURL(pdfUrl);
-      setPdfUrl(null);
-    }
   };
 
   const formatDate = (dateString: string) => {
@@ -142,49 +122,11 @@ export default function DocumentsPage() {
         )}
 
         {/* PDF Viewer Dialog */}
-        <Dialog
+        <PDFPreviewDialog
           open={selectedDocumentId !== null}
           onClose={handleCloseDialog}
-          maxWidth="lg"
-          fullWidth
-          PaperProps={{
-            sx: {
-              height: '90vh',
-              maxHeight: '90vh',
-            },
-          }}
-        >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Document Preview</Typography>
-            <IconButton onClick={handleCloseDialog} size="small">
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent sx={{ p: 0, position: 'relative', height: '100%' }}>
-            {pdfLoading ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100%',
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            ) : pdfUrl ? (
-              <iframe
-                src={pdfUrl}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                }}
-                title="PDF Viewer"
-              />
-            ) : null}
-          </DialogContent>
-        </Dialog>
+          documentId={selectedDocumentId}
+        />
       </Box>
     </AuthGuard>
   );
