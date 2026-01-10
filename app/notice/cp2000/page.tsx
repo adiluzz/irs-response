@@ -340,8 +340,7 @@ export default function CP2000Page() {
               onChange={(e) => {
                 setIncludeReferences(e.target.checked);
                 if (hasGenerated) {
-                  setHasGenerated(false);
-                  setGeneratedOutput('');
+                  clearGeneratedDocument();
                 }
               }}
               style={{
