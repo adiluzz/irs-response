@@ -105,21 +105,28 @@ export function TopBar({ onMobileMenuToggle, isMobileMenuOpen }: TopBarProps) {
         {/* Spacer */}
         <Box sx={{ flexGrow: 1 }} />
 
-        {/* Right side: Badge + User Menu */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* Right side: Preview Badge + User Menu */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
           {!isMobile && (
-            <Badge
-              badgeContent="Preview"
-              color="primary"
+            <Box
               sx={{
-                '& .MuiBadge-badge': {
-                  fontSize: '0.625rem',
-                  padding: '2px 6px',
-                },
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 1,
+                backgroundColor: 'primary.main',
+                color: 'white',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
-            />
+            >
+              Preview
+            </Box>
           )}
-          <UserMenu />
+          <Box sx={{ minWidth: 0, flexShrink: 1 }}>
+            <UserMenu />
+          </Box>
         </Box>
       </Toolbar>
     </AppBar>

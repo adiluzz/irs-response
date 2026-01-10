@@ -12,9 +12,9 @@ import {
     Textarea,
 } from '@/components/forms'
 import { FormPanel } from '@/components/layout/FormPanel'
-import { SplitView } from '@/components/layout/SplitView'
-import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel'
+import { DocumentActionButtons } from '@/components/documents/DocumentActionButtons'
 import { Button } from '@/components/ui/Button'
+import { Box, CircularProgress, Typography } from '@mui/material'
 import React, { useCallback, useMemo, useState } from 'react'
 
 // SWITCH: stop using legacy generator router, use the new letter engine
@@ -311,7 +311,6 @@ export default function Letter1058Page() {
 
   return (
     <AuthGuard>
-    <SplitView>
       <FormPanel
         title="TAC Emergency IRS Responder"
         subtitle="Deterministic IRS Notice Response Engine"
@@ -563,7 +562,7 @@ export default function Letter1058Page() {
             )}
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <Button variant="secondary" type="button" disabled>
+              <Button variant="secondary" type="button" disabled={isGenerating}>
                 Save Draft
               </Button>
               <Button variant="primary" type="button" disabled={!canGenerate || isGenerating} onClick={handleGenerate}>
@@ -572,16 +571,31 @@ export default function Letter1058Page() {
             </div>
           </div>
         </FormActions>
-      </FormPanel>
 
-      <NoticePreviewPanel
-        generatedOutput={generatedOutput}
-        noticeType="Letter1058"
-        documentId={documentId}
-        pdfUrl={pdfUrl}
-        isGenerating={isGenerating}
-      />
-    </SplitView>
+        {isGenerating && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 6,
+              gap: 2,
+            }}
+          >
+            <CircularProgress size={48} />
+            <Typography variant="body1" color="text.secondary">
+              Generating your document...
+            </Typography>
+          </Box>
+        )}
+
+        {hasGenerated && documentId && !isGenerating && (
+          <Box sx={{ mt: 3 }}>
+            <DocumentActionButtons documentId={documentId} noticeType="Letter1058" />
+          </Box>
+        )}
+      </FormPanel>
     </AuthGuard>
   )
 }

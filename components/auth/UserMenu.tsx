@@ -16,6 +16,7 @@ import {
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DescriptionIcon from '@mui/icons-material/Description';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { useState } from 'react';
 
 export function UserMenu() {
@@ -75,17 +76,24 @@ export function UserMenu() {
 
   return (
     <>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
         <Typography
           variant="body2"
-          sx={{ display: { xs: 'none', sm: 'block' }, color: 'text.secondary' }}
+          sx={{ 
+            display: { xs: 'none', sm: 'block' }, 
+            color: 'text.secondary',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: { sm: '150px', md: '200px' },
+          }}
         >
           {session.user?.name || session.user?.email}
         </Typography>
         <IconButton
           onClick={handleClick}
           size="small"
-          sx={{ ml: 1 }}
+          sx={{ ml: 1, flexShrink: 0 }}
           aria-controls={open ? 'account-menu' : undefined}
           aria-haspopup="true"
           aria-expanded={open ? 'true' : undefined}
@@ -158,6 +166,15 @@ export function UserMenu() {
         >
           <DescriptionIcon sx={{ mr: 2, fontSize: 20 }} />
           My Documents
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            router.push('/pricing');
+          }}
+        >
+          <WorkspacePremiumIcon sx={{ mr: 2, fontSize: 20 }} />
+          Go Pro
         </MenuItem>
         <MenuItem onClick={handleLogout}>
           <LogoutIcon sx={{ mr: 2, fontSize: 20 }} />

@@ -12,12 +12,12 @@ import {
     Textarea,
 } from '@/components/forms';
 import { FormPanel } from '@/components/layout/FormPanel';
-import { SplitView } from '@/components/layout/SplitView';
-import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel';
+import { DocumentActionButtons } from '@/components/documents/DocumentActionButtons';
 import { Button } from '@/components/ui/Button';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { type LetterContext } from '@/lib/letters';
 import { useDocumentGeneration } from '@/lib/hooks/useDocumentGeneration';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 function formatSSN(value: string): string {
   const digits = value.replace(/\D/g, '');
@@ -84,8 +84,6 @@ export default function CP2000Page() {
     clearDocument: clearGeneratedDocument,
     setValidationError,
   } = useDocumentGeneration();
-  // Preview scroll container ref (used to force scrollTop=0 after generation)
-  const previewScrollRef = useRef<HTMLDivElement | null>(null);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -184,8 +182,7 @@ export default function CP2000Page() {
 
   return (
     <AuthGuard>
-      <SplitView>
-        <FormPanel 
+      <FormPanel 
           title="TAC Emergency IRS Responder" 
           subtitle="Deterministic IRS Notice Response Engine"
           noticeBadge="CP2000 — Underreporter Inquiry"
@@ -390,7 +387,7 @@ export default function CP2000Page() {
             )}
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <Button variant="secondary" type="button" disabled>
+              <Button variant="secondary" type="button" disabled={isGenerating}>
                 Save Draft
               </Button>
               <Button variant="primary" type="button" disabled={!canGenerate || isGenerating} onClick={handleGenerate}>
@@ -399,18 +396,31 @@ export default function CP2000Page() {
             </div>
           </div>
         </FormActions>
-      </FormPanel>
 
-      <NoticePreviewPanel
-        generatedOutput={generatedOutput}
-        noticeType="CP2000"
-        useLetterPreview={true}
-        previewScrollRef={previewScrollRef}
-        documentId={documentId}
-        pdfUrl={pdfUrl}
-        isGenerating={isGenerating}
-      />
-    </SplitView>
+        {isGenerating && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 6,
+              gap: 2,
+            }}
+          >
+            <CircularProgress size={48} />
+            <Typography variant="body1" color="text.secondary">
+              Generating your document...
+            </Typography>
+          </Box>
+        )}
+
+        {hasGenerated && documentId && !isGenerating && (
+          <Box sx={{ mt: 3 }}>
+            <DocumentActionButtons documentId={documentId} noticeType="CP2000" />
+          </Box>
+        )}
+      </FormPanel>
     </AuthGuard>
   );
 }

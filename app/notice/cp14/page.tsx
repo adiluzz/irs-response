@@ -1,27 +1,25 @@
-// app/notice/cp503/page.tsx
+// app/notice/cp14/page.tsx
 'use client'
 
 import { AuthGuard } from '@/components/auth/AuthGuard'
+import { DocumentActionButtons } from '@/components/documents/DocumentActionButtons'
 import {
-    FormActions,
-    FormField,
-    FormRow,
-    FormSection,
-    Input,
-    Select,
-    Textarea,
+  FormActions,
+  FormField,
+  FormRow,
+  FormSection,
+  Input,
+  Select,
+  Textarea,
 } from '@/components/forms'
 import { FormPanel } from '@/components/layout/FormPanel'
-import { SplitView } from '@/components/layout/SplitView'
-import { NoticePreviewPanel } from '@/components/preview/NoticePreviewPanel'
 import { Button } from '@/components/ui/Button'
+import { Box, CircularProgress, Typography } from '@mui/material'
 import React, { useCallback, useMemo, useState } from 'react'
 
 // SWITCH: stop using legacy generator router, use the new letter engine
-import { composeLetter, getBlueprint, type LetterContext } from '@/lib/letters'
-import { generateEducationalReferences } from '@/lib/letters/educationalReferences'
 import { useDocumentGeneration } from '@/lib/hooks/useDocumentGeneration'
-import { createDocument } from '@/lib/api/documents'
+import { type LetterContext } from '@/lib/letters'
 
 
 // Align to your engine patterns used in CP14/CP504 pages
@@ -312,7 +310,6 @@ export default function CP503Page() {
 
   return (
     <AuthGuard>
-    <SplitView>
       <FormPanel
         title="TAC Emergency IRS Responder"
         subtitle="Deterministic IRS Notice Response Engine"
@@ -564,7 +561,7 @@ export default function CP503Page() {
             )}
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <Button variant="secondary" type="button" disabled>
+              <Button variant="secondary" type="button" disabled={isGenerating}>
                 Save Draft
               </Button>
               <Button variant="primary" type="button" disabled={!canGenerate || isGenerating} onClick={handleGenerate}>
@@ -573,16 +570,31 @@ export default function CP503Page() {
             </div>
           </div>
         </FormActions>
-      </FormPanel>
 
-      <NoticePreviewPanel
-        generatedOutput={generatedOutput}
-        noticeType="CP14"
-        documentId={documentId}
-        isGenerating={isGenerating}
-        pdfUrl={pdfUrl}
-      />
-    </SplitView>
+        {isGenerating && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 6,
+              gap: 2,
+            }}
+          >
+            <CircularProgress size={48} />
+            <Typography variant="body1" color="text.secondary">
+              Generating your document...
+            </Typography>
+          </Box>
+        )}
+
+        {hasGenerated && documentId && !isGenerating && (
+          <Box sx={{ mt: 3 }}>
+            <DocumentActionButtons documentId={documentId} noticeType="CP14" />
+          </Box>
+        )}
+      </FormPanel>
     </AuthGuard>
   )
 }

@@ -23,6 +23,9 @@ export function FormPanel({ title, subtitle, children, noticeBadge }: FormPanelP
         maxWidth: '100%',
         boxSizing: 'border-box',
         minHeight: 0, // Allow flex shrinking
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
       }}
     >
       {/* Brand header */}
@@ -101,7 +104,6 @@ export function FormPanel({ title, subtitle, children, noticeBadge }: FormPanelP
             fontStyle: 'italic',
             color: 'text.secondary',
             width: '100%',
-            maxWidth: { xs: '100%', md: '720px' },
             fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '1rem' },
           }}
         >
@@ -113,7 +115,6 @@ export function FormPanel({ title, subtitle, children, noticeBadge }: FormPanelP
       <Card
         sx={{
           width: '100%',
-          maxWidth: { xs: '100%', md: '720px' },
           boxShadow: 2,
         }}
       >
